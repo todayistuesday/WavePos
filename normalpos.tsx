@@ -186,6 +186,7 @@ function GeneralSalesBody() {
         locked={false}
         onClear={() => undefined}
         paymentMethods={generalPaymentMethods}
+        defaultFocusedPaymentMethod="키밴드"
       />
     </main>
   );

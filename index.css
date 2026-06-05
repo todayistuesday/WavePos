@@ -539,6 +539,15 @@ input:focus-visible {
   font-size: 20px;
   font-weight: 800;
   cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.method-button.is-active {
+  border-color: #8f2be8;
+  background: linear-gradient(180deg, #9b21f3 0%, #861cea 100%);
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(139, 22, 241, 0.22);
 }
 
 .checkout__pay {
@@ -568,7 +577,7 @@ input:focus-visible {
 
 .keyband-search {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 118px;
+  grid-template-columns: minmax(0, 1fr) 118px 118px;
   gap: 12px;
 }
 
@@ -605,6 +614,10 @@ input:focus-visible {
   font-size: 18px;
   font-weight: 800;
   cursor: pointer;
+}
+
+.keyband-search__button--reset {
+  background: #4e5578;
 }
 
 .keyband-search__meta {

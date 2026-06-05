@@ -13,7 +13,19 @@ function normalizeScanValue(value: string) {
 }
 
 function isValidKeybandFormat(value: string) {
-  return /^KB-\d{4}$/.test(value);
+  const match = /^KB-(\d{4})$/.exec(value);
+
+  if (!match) {
+    return false;
+  }
+
+  const keybandNumber = Number(match[1]);
+
+  return keybandNumber >= 1 && keybandNumber <= 9999;
+}
+
+function isReturnedKeyband(row: KeybandRow) {
+  return row.status === "결제 완료";
 }
 
 function getItemAmount(item: CheckoutItem) {
@@ -127,6 +139,7 @@ export function KeybandPos() {
   const [keybandCartItemIds, setKeybandCartItemIds] = useState<string[]>([]);
   const [issuedRows, setIssuedRows] = useState<KeybandRow[]>([]);
   const [issuedPendingTicketIds, setIssuedPendingTicketIds] = useState<string[]>([]);
+  const [searchedRowIds, setSearchedRowIds] = useState<string[]>([]);
   const [issueTargetId, setIssueTargetId] = useState<string | null>(null);
   const [issueBandFields, setIssueBandFields] = useState<IssueBandField[]>([]);
   const [issueError, setIssueError] = useState("");
@@ -141,13 +154,10 @@ export function KeybandPos() {
     [issuedPendingTicketIds],
   );
 
-  const filteredRows = useMemo(() => {
-    if (!query) {
-      return keybandRows;
-    }
-
-    return keybandRows.filter((row) => matchesIssuedRow(row, query, queryDigits));
-  }, [query, queryDigits]);
+  const filteredRows = useMemo(
+    () => trackedRows.filter((row) => searchedRowIds.includes(row.id)),
+    [trackedRows, searchedRowIds],
+  );
 
   const pendingTicketMatch = useMemo(
     () => findPendingTicketByQuery(pendingTickets, query, queryDigits),
@@ -211,7 +221,7 @@ export function KeybandPos() {
   };
 
   const handleAddToCart = (rowId: string) => {
-    const row = keybandRows.find((keybandRow) => keybandRow.id === rowId);
+    const row = trackedRows.find((keybandRow) => keybandRow.id === rowId);
 
     if (!row) {
       return;
@@ -227,9 +237,28 @@ export function KeybandPos() {
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    if (query || queryDigits) {
+      const matchedRowIds = trackedRows
+        .filter((row) => matchesIssuedRow(row, query, queryDigits))
+        .map((row) => row.id);
+
+      if (matchedRowIds.length > 0) {
+        setSearchedRowIds((current) => [
+          ...current,
+          ...matchedRowIds.filter((rowId) => !current.includes(rowId)),
+        ]);
+      }
+    }
+
     if (pendingTicketMatch) {
       openIssueModal(pendingTicketMatch.id);
     }
+  };
+
+  const handleSearchReset = () => {
+    setKeybandQuery("");
+    setSearchedRowIds([]);
+    closeIssueModal();
   };
 
   const handleIssueSubmit = () => {
@@ -249,11 +278,7 @@ export function KeybandPos() {
       return;
     }
 
-    const invalidBandNo = normalizedBandNos.find(
-      (bandNo) =>
-        !isValidKeybandFormat(bandNo) ||
-        !availableKeybands.some((availableBandNo) => availableBandNo === bandNo),
-    );
+    const invalidBandNo = normalizedBandNos.find((bandNo) => !isValidKeybandFormat(bandNo));
 
     if (invalidBandNo) {
       setIssueError("등록된 보유 키밴드가 아닙니다");
@@ -261,11 +286,13 @@ export function KeybandPos() {
     }
 
     const alreadyIssuedBandNo = normalizedBandNos.find((bandNo) =>
-      trackedRows.some((row) => normalizeScanValue(row.bandNo) === bandNo),
+      trackedRows.some(
+        (row) => normalizeScanValue(row.bandNo) === bandNo && !isReturnedKeyband(row),
+      ),
     );
 
     if (alreadyIssuedBandNo) {
-      setIssueError(`이미 다른 예약에 발급된 키밴드입니다: ${alreadyIssuedBandNo}`);
+      setIssueError("이미 사용 중인 키 밴드 입니다.");
       return;
     }
 
@@ -274,6 +301,10 @@ export function KeybandPos() {
     setIssuedRows((current) => [...nextIssuedRows, ...current]);
     setIssuedPendingTicketIds((current) => [...current, currentIssueTarget.id]);
     setKeybandQuery(currentIssueTarget.reservationNo);
+    setSearchedRowIds((current) => [
+      ...nextIssuedRows.map((row) => row.id),
+      ...current.filter((rowId) => !nextIssuedRows.some((row) => row.id === rowId)),
+    ]);
     closeIssueModal();
   };
 
@@ -299,6 +330,9 @@ export function KeybandPos() {
               <button type="submit" className="keyband-search__button">
                 조회
               </button>
+              <button type="button" className="keyband-search__button keyband-search__button--reset" onClick={handleSearchReset}>
+                초기화
+              </button>
             </form>
 
             <div className="keyband-search__meta">
@@ -309,7 +343,7 @@ export function KeybandPos() {
           <section className="panel keyband-panel keyband-panel--list">
             <div className="panel__header panel__header--inline">
               <h2>조회 내역 리스트</h2>
-              <span className="panel__copy">정산 내역 확인 · 장바구니 담기</span>
+              <span className="panel__copy">조회 결과가 있는 상태에서 조회 시 내역 리스트에 추가 표시 됩니다.</span>
               {shouldShowHistoryNav ? (
                 <div className="panel__nav">
                   <button type="button" aria-label="이전 내역">
@@ -382,6 +416,7 @@ export function KeybandPos() {
           locked
           onClear={() => setKeybandCartItemIds([])}
           paymentMethods={keybandPaymentMethods}
+          defaultFocusedPaymentMethod="신용 카드"
           showDiscountActions={false}
         />
       </main>

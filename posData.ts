@@ -48,7 +48,7 @@ export const keybandRows = [
     phone: "010-1234-1001",
     name: "이현우",
     time: "15:05",
-    amount: "32,000원",
+    amount: "48,000원",
     status: "정산 가능",
     detail: "보드 대여 2건 · 음료 1건",
     items: [
@@ -67,6 +67,14 @@ export const keybandRows = [
         ticketName: "아이스 아메리카노",
         price: "14,000원",
         quantity: 1,
+      },
+      {
+        id: "kb-1001-towel",
+        productName: "타월",
+        session: "2026-05-01 ~ 2026-12-31",
+        ticketName: "비치타올",
+        price: "8,000원",
+        quantity: 2,
       },
     ],
   },
@@ -92,7 +100,7 @@ export const keybandRows = [
       {
         id: "kb-1002-locker",
         productName: "락커",
-        session: "종일",
+        session: "종일 (퇴장시 까지)",
         ticketName: "개인 락커",
         price: "3,000원",
         quantity: 1,

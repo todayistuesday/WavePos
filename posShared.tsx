@@ -1,4 +1,5 @@
 import { Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export type CheckoutItem = {
   id: string;
@@ -15,6 +16,7 @@ interface CheckoutPanelProps {
   locked: boolean;
   onClear: () => void;
   paymentMethods: readonly string[];
+  defaultFocusedPaymentMethod?: string;
   showDiscountActions?: boolean;
 }
 
@@ -24,8 +26,23 @@ export function CheckoutPanel({
   locked,
   onClear,
   paymentMethods,
+  defaultFocusedPaymentMethod,
   showDiscountActions = true,
 }: CheckoutPanelProps) {
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
+    defaultFocusedPaymentMethod && paymentMethods.includes(defaultFocusedPaymentMethod)
+      ? defaultFocusedPaymentMethod
+      : paymentMethods[0] ?? "",
+  );
+
+  useEffect(() => {
+    setSelectedPaymentMethod(
+      defaultFocusedPaymentMethod && paymentMethods.includes(defaultFocusedPaymentMethod)
+        ? defaultFocusedPaymentMethod
+        : paymentMethods[0] ?? "",
+    );
+  }, [defaultFocusedPaymentMethod, paymentMethods]);
+
   const totalAmount = items.reduce(
     (sum, item) => sum + Number(item.amount.replace(/[^0-9]/g, "")) * item.quantity,
     0,
@@ -135,7 +152,14 @@ export function CheckoutPanel({
 
         <div className="checkout__methods">
           {paymentMethods.map((method) => (
-            <button key={method} type="button" className="method-button">
+            <button
+              key={method}
+              type="button"
+              className={`method-button${method === selectedPaymentMethod ? " is-active" : ""}`}
+              autoFocus={method === defaultFocusedPaymentMethod}
+              aria-pressed={method === selectedPaymentMethod}
+              onClick={() => setSelectedPaymentMethod(method)}
+            >
               {method}
             </button>
           ))}
