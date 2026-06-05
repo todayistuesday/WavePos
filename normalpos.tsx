@@ -1,7 +1,7 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { useMemo, useState } from "react";
 
-import { CheckoutPanel } from "./posShared";
+import { CheckoutPanel, type CheckoutItem } from "./posShared";
 import { generalPaymentMethods, productCategories, schedules, ticketOptions, topTabs } from "./posData";
 
 type NormalPosTab = (typeof topTabs)[number];
@@ -74,121 +74,315 @@ const refundDetailRows: RefundDetailRow[] = [
   },
 ];
 
+function normalizeKeybandTag(value: string) {
+  return value.trim().toUpperCase();
+}
+
 function GeneralSalesBody() {
   const [selectedCategory, setSelectedCategory] = useState("surf");
   const [selectedSchedule, setSelectedSchedule] = useState("one-hour");
+  const [checkoutItems, setCheckoutItems] = useState<CheckoutItem[]>([]);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("키밴드");
+  const [taggingBandNo, setTaggingBandNo] = useState("");
+  const [taggingError, setTaggingError] = useState("");
+  const [isTaggingModalOpen, setIsTaggingModalOpen] = useState(false);
+  const [lastTaggedBandNo, setLastTaggedBandNo] = useState("");
+
+  const checkoutTotal = useMemo(
+    () =>
+      checkoutItems.reduce(
+        (sum, item) => sum + Number(item.amount.replace(/[^0-9]/g, "")) * item.quantity,
+        0,
+      ),
+    [checkoutItems],
+  );
+  const checkoutQuantity = useMemo(
+    () => checkoutItems.reduce((sum, item) => sum + item.quantity, 0),
+    [checkoutItems],
+  );
+
+  const handleAddTicket = (ticket: (typeof ticketOptions)[number]) => {
+    setCheckoutItems((current) => {
+      const existingItem = current.find((item) => item.id === ticket.title);
+
+      if (existingItem) {
+        return current.map((item) =>
+          item.id === ticket.title
+            ? { ...item, quantity: item.quantity + 1 }
+            : item,
+        );
+      }
+
+      return [
+        ...current,
+        {
+          id: ticket.title,
+          title: productCategories.find((item) => item.id === selectedCategory)?.label ?? "현장 상품",
+          time: schedules.find((schedule) => schedule.id === selectedSchedule)?.title ?? "현장 선택",
+          detail: ticket.title,
+          amount: ticket.price,
+          quantity: 1,
+        },
+      ];
+    });
+  };
+
+  const handleRemoveItem = (itemId: string) => {
+    setCheckoutItems((current) => current.filter((item) => item.id !== itemId));
+  };
+
+  const handleClearItems = () => {
+    setCheckoutItems([]);
+    setLastTaggedBandNo("");
+  };
+
+  const closeTaggingModal = () => {
+    setIsTaggingModalOpen(false);
+    setTaggingBandNo("");
+    setTaggingError("");
+  };
+
+  const handlePay = (paymentMethod: string) => {
+    if (checkoutItems.length === 0) {
+      return;
+    }
+
+    if (paymentMethod === "키밴드") {
+      setIsTaggingModalOpen(true);
+      setTaggingError("");
+      return;
+    }
+
+    setCheckoutItems([]);
+    setLastTaggedBandNo("");
+  };
+
+  const handleTaggingSubmit = () => {
+    const normalizedBandNo = normalizeKeybandTag(taggingBandNo);
+
+    if (!normalizedBandNo) {
+      setTaggingError("키밴드를 태깅해 주세요.");
+      return;
+    }
+
+    setLastTaggedBandNo(normalizedBandNo);
+    setCheckoutItems([]);
+    closeTaggingModal();
+  };
 
   return (
-    <main className="pos-main">
-      <section className="pos-left">
-        <section className="panel panel--products">
-          <div className="panel__header">
-            <h2>상품 선택</h2>
-            <div className="panel__nav">
-              <button type="button" aria-label="이전 상품">
-                <ChevronLeft size={30} strokeWidth={2.2} />
-              </button>
-              <button type="button" aria-label="다음 상품">
-                <ChevronRight size={30} strokeWidth={2.2} />
-              </button>
-            </div>
-          </div>
-
-          <div className="category-grid">
-            {productCategories.map((item) => {
-              const isActive = item.id === selectedCategory;
-
-              return (
-                <button
-                  key={item.id}
-                  className={`category-card${isActive ? " is-active" : ""}`}
-                  type="button"
-                  onClick={() => setSelectedCategory(item.id)}
-                >
-                  <span>{item.label}</span>
-                  {isActive ? <span className="category-card__check">✓</span> : null}
+    <>
+      <main className="pos-main">
+        <section className="pos-left">
+          <section className="panel panel--products">
+            <div className="panel__header">
+              <h2>상품 선택</h2>
+              <div className="panel__nav">
+                <button type="button" aria-label="이전 상품">
+                  <ChevronLeft size={30} strokeWidth={2.2} />
                 </button>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="panel panel--schedule">
-          <div className="panel__header">
-            <h2>스케줄 선택</h2>
-            <div className="panel__nav">
-              <button type="button" aria-label="이전 스케줄">
-                <ChevronLeft size={30} strokeWidth={2.2} />
-              </button>
-              <button type="button" aria-label="다음 스케줄">
-                <ChevronRight size={30} strokeWidth={2.2} />
-              </button>
-            </div>
-          </div>
-
-          <div className="schedule-grid">
-            {schedules.map((schedule) => {
-              const isActive = schedule.id === selectedSchedule;
-
-              return (
-                <button
-                  key={schedule.id}
-                  className={`schedule-card${isActive ? " is-active" : ""}`}
-                  type="button"
-                  onClick={() => setSelectedSchedule(schedule.id)}
-                >
-                  <div className="schedule-card__head">
-                    <strong>{schedule.title}</strong>
-                    {isActive ? <span className="schedule-card__check">✓</span> : null}
-                  </div>
-                  <dl className="schedule-card__stats">
-                    {schedule.rows.map(([label, value]) => (
-                      <div key={label}>
-                        <dt>{label}</dt>
-                        <dd>{value}</dd>
-                      </div>
-                    ))}
-                  </dl>
+                <button type="button" aria-label="다음 상품">
+                  <ChevronRight size={30} strokeWidth={2.2} />
                 </button>
-              );
-            })}
-          </div>
+              </div>
+            </div>
+
+            <div className="category-grid">
+              {productCategories.map((item) => {
+                const isActive = item.id === selectedCategory;
+
+                return (
+                  <button
+                    key={item.id}
+                    className={`category-card${isActive ? " is-active" : ""}`}
+                    type="button"
+                    onClick={() => setSelectedCategory(item.id)}
+                  >
+                    <span>{item.label}</span>
+                    {isActive ? <span className="category-card__check">✓</span> : null}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="panel panel--schedule">
+            <div className="panel__header">
+              <h2>스케줄 선택</h2>
+              <div className="panel__nav">
+                <button type="button" aria-label="이전 스케줄">
+                  <ChevronLeft size={30} strokeWidth={2.2} />
+                </button>
+                <button type="button" aria-label="다음 스케줄">
+                  <ChevronRight size={30} strokeWidth={2.2} />
+                </button>
+              </div>
+            </div>
+
+            <div className="schedule-grid">
+              {schedules.map((schedule) => {
+                const isActive = schedule.id === selectedSchedule;
+
+                return (
+                  <button
+                    key={schedule.id}
+                    className={`schedule-card${isActive ? " is-active" : ""}`}
+                    type="button"
+                    onClick={() => setSelectedSchedule(schedule.id)}
+                  >
+                    <div className="schedule-card__head">
+                      <strong>{schedule.title}</strong>
+                      {isActive ? <span className="schedule-card__check">✓</span> : null}
+                    </div>
+                    <dl className="schedule-card__stats">
+                      {schedule.rows.map(([label, value]) => (
+                        <div key={label}>
+                          <dt>{label}</dt>
+                          <dd>{value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="panel panel--tickets">
+            <div className="panel__header panel__header--inline">
+              <h2>권종 선택</h2>
+              <span className="panel__copy">매진포함</span>
+              <div className="panel__nav">
+                <button type="button" aria-label="이전 권종">
+                  <ChevronLeft size={30} strokeWidth={2.2} />
+                </button>
+                <button type="button" aria-label="다음 권종">
+                  <ChevronRight size={30} strokeWidth={2.2} />
+                </button>
+              </div>
+            </div>
+
+            {lastTaggedBandNo ? (
+              <div className="panel__copy" aria-live="polite">
+                {lastTaggedBandNo} 키밴드로 결제가 완료되었습니다.
+              </div>
+            ) : null}
+
+            <div className="ticket-grid">
+              {ticketOptions.map((ticket) => (
+                <button
+                  key={ticket.title}
+                  className="ticket-card"
+                  type="button"
+                  onClick={() => handleAddTicket(ticket)}
+                >
+                  <strong>{ticket.title}</strong>
+                  <span>{ticket.price}</span>
+                </button>
+              ))}
+            </div>
+          </section>
         </section>
 
-        <section className="panel panel--tickets">
-          <div className="panel__header panel__header--inline">
-            <h2>권종 선택</h2>
-            <span className="panel__copy">매진포함</span>
-            <div className="panel__nav">
-              <button type="button" aria-label="이전 권종">
-                <ChevronLeft size={30} strokeWidth={2.2} />
-              </button>
-              <button type="button" aria-label="다음 권종">
-                <ChevronRight size={30} strokeWidth={2.2} />
+        <CheckoutPanel
+          checkoutLabel={`총 ${checkoutQuantity}매 ${checkoutTotal.toLocaleString()}원 결제하기`}
+          items={checkoutItems}
+          locked={false}
+          onClear={handleClearItems}
+          onRemoveItem={handleRemoveItem}
+          paymentMethods={generalPaymentMethods}
+          defaultFocusedPaymentMethod="키밴드"
+          onPaymentMethodChange={setSelectedPaymentMethod}
+          onPay={handlePay}
+        />
+      </main>
+
+      {isTaggingModalOpen ? (
+        <div className="keyband-issue" role="dialog" aria-modal="true" aria-labelledby="normal-pos-keyband-tag-title">
+          <div className="keyband-issue__backdrop" onClick={closeTaggingModal} />
+          <section className="keyband-issue__panel">
+            <div className="keyband-issue__header">
+              <div>
+                <strong id="normal-pos-keyband-tag-title">키밴드 태깅</strong>
+                <span>선택 상품을 키밴드 결제로 처리합니다.</span>
+              </div>
+              <button
+                type="button"
+                className="keyband-issue__close"
+                onClick={closeTaggingModal}
+                aria-label="팝업 닫기"
+              >
+                <X size={18} />
               </button>
             </div>
-          </div>
 
-          <div className="ticket-grid">
-            {ticketOptions.map((ticket) => (
-              <button key={ticket.title} className="ticket-card" type="button">
-                <strong>{ticket.title}</strong>
-                <span>{ticket.price}</span>
+            <div className="keyband-issue__summary">
+              <div className="keyband-issue__summaryRow">
+                <span>결제 수단</span>
+                <strong>{selectedPaymentMethod}</strong>
+                <span>선택 수량</span>
+                <strong>{checkoutQuantity}매</strong>
+              </div>
+              <div className="keyband-issue__summaryRow">
+                <span>총 결제 금액</span>
+                <strong>{checkoutTotal.toLocaleString()}원</strong>
+                <span>처리 방식</span>
+                <strong>키밴드 결제</strong>
+              </div>
+
+              <div className="keyband-issue__items" role="table" aria-label="선택 상품 요약">
+                <div className="keyband-issue__itemsHead" role="row">
+                  <span>상품명</span>
+                  <span>스케줄</span>
+                  <span>권종</span>
+                  <span>수량</span>
+                </div>
+                <div className="keyband-issue__itemsBody">
+                  {checkoutItems.map((item) => (
+                    <div key={item.id} className="keyband-issue__itemsRow" role="row">
+                      <span>{item.title}</span>
+                      <span>{item.time}</span>
+                      <span>{item.detail}</span>
+                      <span>{item.quantity}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="keyband-issue__field">
+              <span>키밴드 태깅</span>
+              <input
+                type="text"
+                value={taggingBandNo}
+                placeholder="예: KB-2001"
+                onChange={(event) => {
+                  setTaggingBandNo(event.target.value);
+                  if (taggingError) {
+                    setTaggingError("");
+                  }
+                }}
+              />
+            </div>
+
+            <div className="keyband-issue__hint">
+              키밴드를 태깅하면 현재 선택 내역 전체가 해당 키밴드 결제로 완료됩니다.
+            </div>
+
+            {taggingError ? <div className="keyband-issue__error">{taggingError}</div> : null}
+
+            <div className="keyband-issue__actions">
+              <button type="button" className="keyband-issue__secondary" onClick={closeTaggingModal}>
+                취소
               </button>
-            ))}
-          </div>
-        </section>
-      </section>
-
-      <CheckoutPanel
-        checkoutLabel="총 0매 0원 결제하기"
-        items={[]}
-        locked={false}
-        onClear={() => undefined}
-        paymentMethods={generalPaymentMethods}
-        defaultFocusedPaymentMethod="키밴드"
-      />
-    </main>
+              <button type="button" className="keyband-issue__primary" onClick={handleTaggingSubmit}>
+                키밴드 결제 완료
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+    </>
   );
 }
 

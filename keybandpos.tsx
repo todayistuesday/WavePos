@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Plus, Search, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, ShoppingCart, X } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
 
 import { CheckoutPanel, type CheckoutItem } from "./posShared";
@@ -188,11 +188,13 @@ export function KeybandPos() {
 
         return {
           id: item.id,
-          title: `${item.productName} · ${row.bandNo} · ${row.name}`,
+          title: item.productName,
           time: item.session,
           detail: item.ticketName,
           amount: item.price,
           quantity: item.quantity,
+          groupId: row.bandNo,
+          groupLabel: row.bandNo,
         };
       })
       .filter((item): item is CheckoutItem => Boolean(item));
@@ -234,6 +236,24 @@ export function KeybandPos() {
     });
   };
 
+  const handleRemoveFromCart = (itemId: string) => {
+    setKeybandCartItemIds((current) => current.filter((currentItemId) => currentItemId !== itemId));
+  };
+
+  const handleRemoveGroupFromCart = (bandNo: string) => {
+    setKeybandCartItemIds((current) => {
+      const groupItemIds = trackedRows
+        .filter((row) => row.bandNo === bandNo)
+        .flatMap((row) => row.items.map((item) => item.id));
+
+      return current.filter((currentItemId) => !groupItemIds.includes(currentItemId));
+    });
+  };
+
+  const handleClearCart = () => {
+    setKeybandCartItemIds([]);
+  };
+
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -259,6 +279,10 @@ export function KeybandPos() {
     setKeybandQuery("");
     setSearchedRowIds([]);
     closeIssueModal();
+  };
+
+  const handleRemoveFromHistory = (rowId: string) => {
+    setSearchedRowIds((current) => current.filter((currentRowId) => currentRowId !== rowId));
   };
 
   const handleIssueSubmit = () => {
@@ -314,7 +338,7 @@ export function KeybandPos() {
         <section className="keyband-left">
           <section className="panel keyband-panel keyband-panel--search">
             <div className="panel__header">
-              <h2>키밴드 조회</h2>
+              <h2>키 밴드 조회 및 발급</h2>
             </div>
 
             <form className="keyband-search" onSubmit={handleSearchSubmit}>
@@ -368,7 +392,7 @@ export function KeybandPos() {
                   <span>수량</span>
                   <span>결제 금액</span>
                 </div>
-                <span>장바구니</span>
+                <span>동작</span>
               </div>
 
               <div className="keyband-table__body">
@@ -389,15 +413,27 @@ export function KeybandPos() {
                           </div>
                         ))}
                       </div>
-                      <button
-                        type="button"
-                        className={`keyband-row__add${row.inCart ? " is-active" : ""}`}
-                        onClick={() => handleAddToCart(row.id)}
-                        disabled={row.inCart}
-                      >
-                        <Plus size={16} />
-                        {row.inCart ? "담김" : "담기"}
-                      </button>
+                      <div className="keyband-row__actions">
+                        <button
+                          type="button"
+                          className={`keyband-row__add${row.inCart ? " is-active" : ""}`}
+                          onClick={() => handleAddToCart(row.id)}
+                          disabled={row.inCart}
+                          aria-label={row.inCart ? "장바구니에 담김" : "장바구니에 담기"}
+                          title={row.inCart ? "장바구니에 담김" : "장바구니에 담기"}
+                        >
+                          <ShoppingCart size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          className="keyband-row__remove"
+                          onClick={() => handleRemoveFromHistory(row.id)}
+                          aria-label="조회 내역에서 제거"
+                          title="조회 내역에서 제거"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
@@ -414,10 +450,14 @@ export function KeybandPos() {
           checkoutLabel={`총 ${checkoutQuantity}매 ${checkoutTotal.toLocaleString()}원 결제하기`}
           items={cartItems}
           locked
-          onClear={() => setKeybandCartItemIds([])}
+          onClear={handleClearCart}
+          onRemoveItem={handleRemoveFromCart}
+          onRemoveGroup={handleRemoveGroupFromCart}
           paymentMethods={keybandPaymentMethods}
           defaultFocusedPaymentMethod="신용 카드"
           showDiscountActions={false}
+          allowClearWhenLocked
+          allowItemRemovalWhenLocked
         />
       </main>
 

@@ -48,6 +48,7 @@ export default function App() {
 
   const figmaButtonLabel =
     copyState === "success" ? "URL 복사됨" : copyState === "error" ? "복사 실패" : "피그마 디자인";
+  const deferredSummaryLabel = isKeybandMode ? null : "키밴드: 77,000원";
 
   return (
     <div className="pos-shell">
@@ -94,7 +95,7 @@ export default function App() {
           <strong>05 김은화</strong>
           <span>현금: 37,000원</span>
           <span>카드: 40,000원</span>
-          <span>후불: 77,000원</span>
+          {deferredSummaryLabel ? <span>{deferredSummaryLabel}</span> : null}
           <span>판매 합계: 77,000원</span>
           <span>발권 수량: 4매</span>
         </div>

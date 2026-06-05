@@ -22,6 +22,7 @@
 html,
 body,
 #root {
+  height: 100%;
   min-height: 100%;
 }
 
@@ -48,14 +49,17 @@ input:focus-visible {
 }
 
 #root {
+  height: 100vh;
   min-height: 100vh;
 }
 
 .pos-shell {
+  height: 100vh;
   min-height: 100vh;
   background: #fff;
   display: grid;
   grid-template-rows: 76px minmax(0, 1fr) 88px;
+  overflow: hidden;
 }
 
 .pos-topbar {
@@ -173,12 +177,14 @@ input:focus-visible {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 420px;
   min-height: 0;
+  overflow: hidden;
 }
 
 .keyband-main {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 420px;
+  grid-template-columns: minmax(0, 1fr) 436px;
   min-height: 0;
+  overflow: hidden;
 }
 
 .pos-left {
@@ -194,6 +200,7 @@ input:focus-visible {
   padding: 30px 28px 24px 28px;
   min-height: 0;
   display: flex;
+  overflow: hidden;
 }
 
 .keyband-left {
@@ -405,7 +412,9 @@ input:focus-visible {
 }
 
 .checkout {
-  min-height: 100%;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
   width: 100%;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto auto auto auto;
@@ -415,6 +424,8 @@ input:focus-visible {
   min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  padding-top: 14px;
 }
 
 .checkout__header {
@@ -635,7 +646,7 @@ input:focus-visible {
 .keyband-table__head,
 .keyband-row {
   display: grid;
-  grid-template-columns: 100px 82px minmax(0, 1fr) 96px;
+  grid-template-columns: 100px 82px minmax(0, 1fr) 92px;
   align-items: center;
   gap: 10px;
 }
@@ -646,6 +657,7 @@ input:focus-visible {
   color: #5a6575;
   font-size: 14px;
   font-weight: 800;
+  text-align: center;
 }
 
 .keyband-table__body {
@@ -662,6 +674,7 @@ input:focus-visible {
   gap: 10px;
   align-items: center;
   min-width: 0;
+  text-align: center;
 }
 
 .keyband-row {
@@ -714,17 +727,16 @@ input:focus-visible {
 }
 
 .keyband-row__add {
+  width: 42px;
   height: 42px;
   border-radius: 12px;
   border: 2px solid #b14ef7;
   background: #fff;
   color: var(--accent);
-  font-size: 14px;
-  font-weight: 800;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  padding: 0;
   cursor: pointer;
 }
 
@@ -734,6 +746,27 @@ input:focus-visible {
   background: #f8fafc;
   color: #7e8896;
   cursor: default;
+}
+
+.keyband-row__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.keyband-row__remove {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid #d7dce3;
+  background: #fff;
+  color: #556173;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
 }
 
 .keyband-pending,
@@ -1031,6 +1064,49 @@ input:focus-visible {
   overflow-y: auto;
   align-content: start;
   padding-right: 6px;
+}
+
+.checkout__group {
+  display: grid;
+  gap: 8px;
+}
+
+.checkout__groupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 2px;
+}
+
+.checkout__groupLabel {
+  color: #556173;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.checkout__groupRemove {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #d7dce3;
+  border-radius: 10px;
+  background: #fff;
+  color: #556173;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+}
+
+.checkout__groupRemove:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+
+.checkout__groupItems {
+  display: grid;
+  gap: 8px;
 }
 
 .checkout__item {
@@ -1565,7 +1641,7 @@ input:focus-visible {
   }
 
   .keyband-main {
-    grid-template-columns: minmax(0, 1fr) 380px;
+    grid-template-columns: minmax(0, 1fr) 396px;
   }
 
   .pos-tabs {
