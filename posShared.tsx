@@ -15,9 +15,17 @@ interface CheckoutPanelProps {
   locked: boolean;
   onClear: () => void;
   paymentMethods: readonly string[];
+  showDiscountActions?: boolean;
 }
 
-export function CheckoutPanel({ checkoutLabel, items, locked, onClear, paymentMethods }: CheckoutPanelProps) {
+export function CheckoutPanel({
+  checkoutLabel,
+  items,
+  locked,
+  onClear,
+  paymentMethods,
+  showDiscountActions = true,
+}: CheckoutPanelProps) {
   const totalAmount = items.reduce(
     (sum, item) => sum + Number(item.amount.replace(/[^0-9]/g, "")) * item.quantity,
     0,
@@ -40,56 +48,58 @@ export function CheckoutPanel({ checkoutLabel, items, locked, onClear, paymentMe
           </button>
         </div>
 
-        {items.length === 0 ? (
-          <div className="checkout__empty">현재 선택 내역에 등록된 상품이 없습니다.</div>
-        ) : (
-          <div className="checkout__items" role="list" aria-label="선택 내역">
-            {items.map((item) => (
-              <article key={item.id} className="checkout__item" role="listitem">
-                <div className="checkout__itemHead">
-                  <strong>{item.title}</strong>
-                  <span className="checkout__itemTime">{item.time}</span>
-                </div>
+        <div className="checkout__body">
+          {items.length === 0 ? (
+            <div className="checkout__empty">현재 선택 내역에 등록된 상품이 없습니다.</div>
+          ) : (
+            <div className="checkout__items" role="list" aria-label="선택 내역">
+              {items.map((item) => (
+                <article key={item.id} className="checkout__item" role="listitem">
+                  <div className="checkout__itemHead">
+                    <strong>{item.title}</strong>
+                    <span className="checkout__itemTime">{item.time}</span>
+                  </div>
 
-                <div className="checkout__itemBody">
-                  <span className="checkout__itemDetail">{item.detail}</span>
-                  <strong className="checkout__itemAmount">{item.amount}</strong>
-                </div>
+                  <div className="checkout__itemBody">
+                    <span className="checkout__itemDetail">{item.detail}</span>
+                    <strong className="checkout__itemAmount">{item.amount}</strong>
+                  </div>
 
-                <div className="checkout__itemControls">
-                  <div className="checkout__qtyGroup" aria-label="수량">
+                  <div className="checkout__itemControls">
+                    <div className="checkout__qtyGroup" aria-label="수량">
+                      <button
+                        type="button"
+                        className="checkout__qtyButton"
+                        disabled={locked}
+                        aria-disabled={locked}
+                      >
+                        -
+                      </button>
+                      <span className="checkout__qtyValue">{item.quantity}</span>
+                      <button
+                        type="button"
+                        className="checkout__qtyButton"
+                        disabled={locked}
+                        aria-disabled={locked}
+                      >
+                        +
+                      </button>
+                    </div>
                     <button
                       type="button"
-                      className="checkout__qtyButton"
+                      className="checkout__deleteButton"
                       disabled={locked}
                       aria-disabled={locked}
+                      aria-label="삭제"
                     >
-                      −
-                    </button>
-                    <span className="checkout__qtyValue">{item.quantity}</span>
-                    <button
-                      type="button"
-                      className="checkout__qtyButton"
-                      disabled={locked}
-                      aria-disabled={locked}
-                    >
-                      +
+                      <Trash2 size={18} />
                     </button>
                   </div>
-                  <button
-                    type="button"
-                    className="checkout__deleteButton"
-                    disabled={locked}
-                    aria-disabled={locked}
-                    aria-label="삭제"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
 
         <dl className="checkout__summary">
           <div>
@@ -112,14 +122,16 @@ export function CheckoutPanel({ checkoutLabel, items, locked, onClear, paymentMe
           </div>
         </dl>
 
-        <div className="checkout__actions">
-          <button type="button" className="action-outline">
-            낱장 발권
-          </button>
-          <button type="button" className="action-outline">
-            할인
-          </button>
-        </div>
+        {showDiscountActions ? (
+          <div className="checkout__actions">
+            <button type="button" className="action-outline">
+              낱장 발권
+            </button>
+            <button type="button" className="action-outline">
+              할인
+            </button>
+          </div>
+        ) : null}
 
         <div className="checkout__methods">
           {paymentMethods.map((method) => (
