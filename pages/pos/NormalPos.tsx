@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-import { CheckoutPanel, type CheckoutItem } from "./posShared";
+import { CheckoutPanel, type CheckoutItem } from "../../components/pos/CheckoutPanel";
 import { generalPaymentMethods, productCategories, schedules, ticketOptions, topTabs } from "./posData";
 
 type NormalPosTab = (typeof topTabs)[number];
@@ -82,11 +82,11 @@ function GeneralSalesBody() {
   const [selectedCategory, setSelectedCategory] = useState("surf");
   const [selectedSchedule, setSelectedSchedule] = useState("one-hour");
   const [checkoutItems, setCheckoutItems] = useState<CheckoutItem[]>([]);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("키밴드");
   const [taggingBandNo, setTaggingBandNo] = useState("");
   const [taggingError, setTaggingError] = useState("");
   const [isTaggingModalOpen, setIsTaggingModalOpen] = useState(false);
   const [lastTaggedBandNo, setLastTaggedBandNo] = useState("");
+  const taggingInputRef = useRef<HTMLInputElement>(null);
 
   const checkoutTotal = useMemo(
     () =>
@@ -100,6 +100,14 @@ function GeneralSalesBody() {
     () => checkoutItems.reduce((sum, item) => sum + item.quantity, 0),
     [checkoutItems],
   );
+
+  useEffect(() => {
+    if (!isTaggingModalOpen) {
+      return;
+    }
+
+    taggingInputRef.current?.focus();
+  }, [isTaggingModalOpen]);
 
   const handleAddTicket = (ticket: (typeof ticketOptions)[number]) => {
     setCheckoutItems((current) => {
@@ -168,6 +176,14 @@ function GeneralSalesBody() {
     setLastTaggedBandNo(normalizedBandNo);
     setCheckoutItems([]);
     closeTaggingModal();
+  };
+
+  const handleTaggingInputChange = (value: string) => {
+    setTaggingBandNo(value);
+
+    if (taggingError) {
+      setTaggingError("");
+    }
   };
 
   return (
@@ -292,7 +308,6 @@ function GeneralSalesBody() {
           onRemoveItem={handleRemoveItem}
           paymentMethods={generalPaymentMethods}
           defaultFocusedPaymentMethod="키밴드"
-          onPaymentMethodChange={setSelectedPaymentMethod}
           onPay={handlePay}
         />
       </main>
@@ -304,7 +319,6 @@ function GeneralSalesBody() {
             <div className="keyband-issue__header">
               <div>
                 <strong id="normal-pos-keyband-tag-title">키밴드 태깅</strong>
-                <span>선택 상품을 키밴드 결제로 처리합니다.</span>
               </div>
               <button
                 type="button"
@@ -316,57 +330,26 @@ function GeneralSalesBody() {
               </button>
             </div>
 
-            <div className="keyband-issue__summary">
-              <div className="keyband-issue__summaryRow">
-                <span>결제 수단</span>
-                <strong>{selectedPaymentMethod}</strong>
-                <span>선택 수량</span>
-                <strong>{checkoutQuantity}매</strong>
-              </div>
-              <div className="keyband-issue__summaryRow">
-                <span>총 결제 금액</span>
-                <strong>{checkoutTotal.toLocaleString()}원</strong>
-                <span>처리 방식</span>
-                <strong>키밴드 결제</strong>
-              </div>
-
-              <div className="keyband-issue__items" role="table" aria-label="선택 상품 요약">
-                <div className="keyband-issue__itemsHead" role="row">
-                  <span>상품명</span>
-                  <span>스케줄</span>
-                  <span>권종</span>
-                  <span>수량</span>
-                </div>
-                <div className="keyband-issue__itemsBody">
-                  {checkoutItems.map((item) => (
-                    <div key={item.id} className="keyband-issue__itemsRow" role="row">
-                      <span>{item.title}</span>
-                      <span>{item.time}</span>
-                      <span>{item.detail}</span>
-                      <span>{item.quantity}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
             <div className="keyband-issue__field">
-              <span>키밴드 태깅</span>
               <input
+                ref={taggingInputRef}
                 type="text"
                 value={taggingBandNo}
                 placeholder="예: KB-2001"
-                onChange={(event) => {
-                  setTaggingBandNo(event.target.value);
-                  if (taggingError) {
-                    setTaggingError("");
+                onChange={(event) => handleTaggingInputChange(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key !== "Enter") {
+                    return;
                   }
+
+                  event.preventDefault();
+                  handleTaggingSubmit();
                 }}
               />
             </div>
 
             <div className="keyband-issue__hint">
-              키밴드를 태깅하면 현재 선택 내역 전체가 해당 키밴드 결제로 완료됩니다.
+              스캐너 입력 후 Enter가 들어오면 현재 선택 내역 전체가 해당 키밴드 결제로 완료됩니다.
             </div>
 
             {taggingError ? <div className="keyband-issue__error">{taggingError}</div> : null}
@@ -390,9 +373,11 @@ function RefundBody() {
   const [hasResult, setHasResult] = useState(false);
   const [refundReason, setRefundReason] = useState("");
   const [cardInputEnabled, setCardInputEnabled] = useState(false);
+  const [refundQueryType, setRefundQueryType] = useState<"키 밴드" | "티켓 번호">("키 밴드");
 
   const summaryRows = hasResult ? refundSummaryRows : [];
   const detailRows = hasResult ? refundDetailRows : [];
+  const isKeybandQuery = refundQueryType === "키 밴드";
 
   return (
     <main className="refund-page">
@@ -426,7 +411,11 @@ function RefundBody() {
 
           {/* Row 2: 검색 쿼리 */}
           <div className="refund-search__query">
-            <select className="refund-query__type" defaultValue="키 밴드">
+            <select
+              className="refund-query__type"
+              value={refundQueryType}
+              onChange={(event) => setRefundQueryType(event.target.value as "키 밴드" | "티켓 번호")}
+            >
               <option>키 밴드</option>
               <option>티켓 번호</option>
             </select>
@@ -440,10 +429,19 @@ function RefundBody() {
               value="05"
               readOnly
             />
-            <input className="refund-query__input" defaultValue="5" />
             <input
-              className="refund-query__text"
-              placeholder="키 밴드를 인식해 주세요."
+              className={`refund-query__input${isKeybandQuery ? " refund-query__input--disabled" : ""}`}
+              defaultValue="5"
+              disabled={isKeybandQuery}
+            />
+            <input
+              className={`refund-query__text${!isKeybandQuery ? " refund-query__input--disabled" : ""}`}
+              placeholder={
+                isKeybandQuery
+                  ? "키 밴드를 인식해 주세요."
+                  : "티켓 번호 조회 시 키 밴드 입력은 비활성화됩니다."
+              }
+              disabled={!isKeybandQuery}
             />
             <div className="refund-search__actions">
               <button
@@ -460,6 +458,7 @@ function RefundBody() {
                   setHasResult(false);
                   setRefundReason("");
                   setCardInputEnabled(false);
+                  setRefundQueryType("키 밴드");
                 }}
               >
                 초기화
@@ -566,47 +565,46 @@ function RefundBody() {
           />
         </div>
 
-        <div className="refund-bottom__actions">
-          <label className="refund-card-toggle">
+        <div className="refund-bottom__right">
+          <div className="refund-bottom__actions">
+            <label className="refund-card-toggle">
+              <input
+                type="checkbox"
+                checked={cardInputEnabled}
+                onChange={(event) => setCardInputEnabled(event.target.checked)}
+              />
+              <span>카드 번호 입력</span>
+            </label>
+
+            <button type="button" className="refund-button refund-button--dark">
+              티켓 재출력
+            </button>
+            <button type="button" className="refund-button refund-button--light">
+              영수증 재출력
+            </button>
+            <button type="button" className="refund-button refund-button--light">
+              현금 영수증 발행
+            </button>
+            <button
+              type="button"
+              className="refund-button refund-button--primary refund-button--submit"
+            >
+              환불
+            </button>
+          </div>
+
+          {cardInputEnabled ? (
             <input
-              type="checkbox"
-              checked={cardInputEnabled}
-              onChange={(event) => setCardInputEnabled(event.target.checked)}
+              className="refund-card-input"
+              type="text"
+              placeholder="카드 번호를 입력하세요."
             />
-            <span>카드 번호 입력</span>
-          </label>
-
-          <button type="button" className="refund-button refund-button--dark">
-            티켓 재출력
-          </button>
-          <button type="button" className="refund-button refund-button--light">
-            영수증 재출력
-          </button>
-          <button type="button" className="refund-button refund-button--light">
-            현금 영수증 발행
-          </button>
-          <button
-            type="button"
-            className="refund-button refund-button--primary refund-button--submit"
-          >
-            환불
-          </button>
+          ) : null}
         </div>
-
-        {cardInputEnabled ? (
-          <input
-            className="refund-card-input"
-            type="text"
-            placeholder="카드 번호를 입력하세요."
-          />
-        ) : (
-          <div className="refund-card-input refund-card-input--placeholder" />
-        )}
       </section>
     </main>
   );
 }
-
 
 interface NormalPosProps {
   selectedTab: NormalPosTab;

@@ -1,21 +1,54 @@
-
 import { Circle } from "lucide-react";
+import html2canvas from "html2canvas";
 import { startTransition, useEffect, useState } from "react";
-import { KeybandPos } from "./keybandpos";
-import { NormalPos } from "./normalpos";
-import { posModes, topTabs } from "./posData";
+
+import { KeybandPos } from "./pages/pos/KeybandPos";
+import { NormalPos } from "./pages/pos/NormalPos";
+import { posModes, topTabs } from "./pages/pos/posData";
 
 type CopyState = "idle" | "success" | "error";
 
-/**
- * 현재 브라우저 URL을 클립보드에 복사.
- * html.to.design 플러그인의 "Import via URL" 필드에 붙여넣어 사용.
- */
-async function copyUrlForFigma() {
-  if (!navigator.clipboard) {
-    throw new Error("Clipboard API를 지원하지 않는 브라우저입니다.");
+async function copyPngForFigma() {
+  if (!navigator.clipboard || typeof ClipboardItem === "undefined") {
+    throw new Error("PNG 복사를 지원하지 않는 브라우저입니다.");
   }
-  await navigator.clipboard.writeText(window.location.href);
+
+  const target = document.querySelector(".pos-shell");
+
+  if (!(target instanceof HTMLElement)) {
+    throw new Error("스크린샷 대상을 찾을 수 없습니다.");
+  }
+
+  const canvas = await html2canvas(target, {
+    backgroundColor: "#ffffff",
+    scale: window.devicePixelRatio || 1,
+    useCORS: true,
+    logging: false,
+    scrollX: 0,
+    scrollY: 0,
+    windowWidth: target.scrollWidth,
+    windowHeight: target.scrollHeight,
+    onclone: (clonedDocument) => {
+      clonedDocument.documentElement.scrollTo(0, 0);
+      clonedDocument.body.scrollTo(0, 0);
+    },
+  });
+
+  const pngBlob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error("PNG 생성에 실패했습니다."));
+        return;
+      }
+      resolve(blob);
+    }, "image/png");
+  });
+
+  await navigator.clipboard.write([
+    new ClipboardItem({
+      "image/png": pngBlob,
+    }),
+  ]);
 }
 
 export default function App() {
@@ -38,7 +71,7 @@ export default function App() {
 
   const handleCopyFigmaDesign = async () => {
     try {
-      await copyUrlForFigma();
+      await copyPngForFigma();
       setCopyState("success");
     } catch (error) {
       console.error(error);
@@ -47,7 +80,7 @@ export default function App() {
   };
 
   const figmaButtonLabel =
-    copyState === "success" ? "URL 복사됨" : copyState === "error" ? "복사 실패" : "피그마 디자인";
+    copyState === "success" ? "PNG 복사됨" : copyState === "error" ? "복사 실패" : "스크린샷";
   const deferredSummaryLabel = isKeybandMode ? null : "키밴드: 77,000원";
 
   return (

@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight, Search, ShoppingCart, X } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
 
-import { CheckoutPanel, type CheckoutItem } from "./posShared";
+import { CheckoutPanel, type CheckoutItem } from "../../components/pos/CheckoutPanel";
 import { availableKeybands, keybandPaymentMethods, keybandRows, unmatchedKeybandTickets } from "./posData";
 
 function normalizeDigits(value: string) {
@@ -317,6 +317,15 @@ export function KeybandPos() {
 
     if (alreadyIssuedBandNo) {
       setIssueError("이미 사용 중인 키 밴드 입니다.");
+      return;
+    }
+
+    const missingBandNo = normalizedBandNos.find(
+      (bandNo) => !availableKeybands.some((availableBandNo) => normalizeScanValue(availableBandNo) === bandNo),
+    );
+
+    if (missingBandNo) {
+      setIssueError("등록된 보유 키밴드가 아닙니다");
       return;
     }
 
