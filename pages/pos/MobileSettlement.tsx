@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { Check, Search } from "lucide-react";
 import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
 
 import { keybandRows } from "./posData";
@@ -38,17 +38,17 @@ function getItemDisplayAmount(price: string, quantity: number) {
 function getResultContent(paymentState: Exclude<PaymentState, "idle">) {
   if (paymentState === "failure") {
     return {
-      icon: "!",
+      icon: "failure",
       title: "결제에 실패했습니다",
-      description: "5초 후 후불 정산 화면으로 돌아갑니다.",
+      description: "4초 후 후불 정산 화면으로 돌아갑니다.",
       toneClassName: "is-failure",
     };
   }
 
   return {
-    icon: "✓",
+    icon: "success",
     title: "결제가 완료되었습니다",
-    description: "5초 후 후불 정산 화면으로 돌아갑니다.",
+    description: "4초 후 후불 정산 화면으로 돌아갑니다.",
     toneClassName: "is-success",
   };
 }
@@ -90,7 +90,7 @@ export function MobileSettlementPage() {
       setPaymentState("idle");
       setQuery("");
       setSearchedRowIds([]);
-    }, 5000);
+    }, 4000);
 
     return () => window.clearTimeout(timer);
   }, [paymentState]);
@@ -190,22 +190,30 @@ export function MobileSettlementPage() {
           <strong id="mobile-settlement-title">키밴드 후불 정산</strong>
         </header>
 
-        <div className="mobile-settlement__body">
+        <div className={`mobile-settlement__body${resultContent ? " mobile-settlement__body--result" : ""}`}>
           {resultContent ? (
-            <section className={`mobile-settlement__section mobile-settlement__section--result ${resultContent.toneClassName}`}>
-              <div className="mobile-settlement__resultContent">
-                <div className={`mobile-settlement__resultIcon ${resultContent.toneClassName}`} aria-hidden="true">
-                  {resultContent.icon}
+            <>
+              <section className={`mobile-settlement__section mobile-settlement__section--result ${resultContent.toneClassName}`}>
+                <div className="mobile-settlement__resultContent">
+                  <div className={`mobile-settlement__resultIcon ${resultContent.toneClassName}`} aria-hidden="true">
+                    {resultContent.icon === "success" ? (
+                      <Check size={44} strokeWidth={3.2} />
+                    ) : (
+                      <span className="mobile-settlement__resultIconGlyph">!</span>
+                    )}
+                  </div>
+                  <strong className="mobile-settlement__resultTitle">{resultContent.title}</strong>
+                  <p className={`mobile-settlement__resultDescription ${resultContent.toneClassName}`}>
+                    {resultContent.description}
+                  </p>
                 </div>
-                <strong className="mobile-settlement__resultTitle">{resultContent.title}</strong>
-                <p className={`mobile-settlement__resultDescription ${resultContent.toneClassName}`}>
-                  {resultContent.description}
-                </p>
+              </section>
+              <div className="mobile-settlement__resultAction">
+                <button type="button" className="mobile-settlement__secondaryButton" onClick={resetSettlement}>
+                  추가 정산하기
+                </button>
               </div>
-              <button type="button" className="mobile-settlement__secondaryButton" onClick={resetSettlement}>
-                추가 정산하기
-              </button>
-            </section>
+            </>
           ) : (
             <>
               <section className="mobile-settlement__section">
@@ -242,7 +250,7 @@ export function MobileSettlementPage() {
 
                 <div className="mobile-settlement__results">
                   {results.length === 0 ? (
-                    <div className="mobile-settlement__empty">조회된 키밴드 내역이 없습니다.</div>
+                    <div className="mobile-settlement__empty">조회 결과가 없습니다.</div>
                   ) : (
                     results.map((row) => (
                       <article key={row.id} className="mobile-settlement__card">
