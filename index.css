@@ -98,15 +98,16 @@ input:focus-visible {
   background: #fff;
   overflow: hidden;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .pos-mode-toggle--footer {
-  width: 188px;
+  width: 282px;
   height: 52px;
   border-radius: 12px;
   border-color: #d7dce4;
   flex: 0 0 auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .pos-mode-toggle__button {
@@ -1297,6 +1298,374 @@ input:focus-visible {
   cursor: pointer;
 }
 
+.mobile-settlement-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(111, 140, 182, 0.18), transparent 38%),
+    linear-gradient(180deg, #ecf2f8 0%, #dbe5f0 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 32px 24px;
+}
+
+.mobile-settlement-page__controls {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+}
+
+.mobile-settlement-page__controlRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mobile-settlement-page__toggle {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 320px;
+  padding: 4px;
+  border: 1px solid #cfd9e5;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 10px 26px rgba(31, 42, 58, 0.08);
+}
+
+.mobile-settlement-page__toggleButton {
+  height: 38px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #5b6880;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.mobile-settlement-page__toggleButton.is-active {
+  background: #1f2a3a;
+  color: #ffffff;
+}
+
+.mobile-settlement-page__caption {
+  font-size: 13px;
+  font-weight: 700;
+  color: #607089;
+}
+
+.mobile-settlement-page__capture {
+  height: 46px;
+  min-width: 110px;
+  padding: 0 16px;
+  border: 1px solid #cfd9e5;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  color: #334154;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+}
+
+.mobile-settlement-page__capture.is-success {
+  border-color: #22a447;
+  color: #146d2d;
+  background: #f3fff7;
+}
+
+.mobile-settlement-page__capture.is-error {
+  border-color: #d34646;
+  color: #b12727;
+  background: #fff6f6;
+}
+
+.mobile-settlement {
+  width: var(--device-width, 390px);
+  height: var(--device-height, 844px);
+  max-width: calc(100vw - 48px);
+  max-height: calc(100vh - 64px);
+  border-radius: 34px;
+  border: 1px solid #d7dfeb;
+  background: linear-gradient(180deg, #fdfdff 0%, #f4f7fb 100%);
+  box-shadow: 0 28px 80px rgba(19, 29, 45, 0.24);
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: 72px minmax(0, 1fr) 48px;
+}
+
+.mobile-settlement--tablet {
+  border-radius: 28px;
+}
+
+.mobile-settlement__header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  border-bottom: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.mobile-settlement__header strong {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: #1f2a3a;
+}
+
+.mobile-settlement__body {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  padding: 18px 16px 16px;
+}
+
+.mobile-settlement__section,
+.mobile-settlement__payment {
+  border: 1px solid #dde5ef;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 10px 30px rgba(39, 50, 71, 0.06);
+}
+
+.mobile-settlement__section {
+  padding: 16px;
+}
+
+.mobile-settlement__section--results {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.mobile-settlement__sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.mobile-settlement__sectionHead h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: #1f2a3a;
+}
+
+.mobile-settlement__sectionHead span {
+  font-size: 12px;
+  font-weight: 700;
+  color: #708096;
+}
+
+.mobile-settlement__search {
+  display: grid;
+  gap: 10px;
+}
+
+.mobile-settlement__searchField {
+  height: 52px;
+  border: 1px solid #d6deea;
+  border-radius: 16px;
+  background: #f8fafc;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #627288;
+}
+
+.mobile-settlement__searchField input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #1f2a3a;
+}
+
+.mobile-settlement__searchField input::placeholder {
+  color: #9ca8b9;
+}
+
+.mobile-settlement__searchActions {
+  display: grid;
+  grid-template-columns: 1fr 96px;
+  gap: 10px;
+}
+
+.mobile-settlement__searchButton,
+.mobile-settlement__resetButton,
+.mobile-settlement__payButton {
+  border: 0;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.mobile-settlement__searchButton {
+  height: 48px;
+  background: #9810fa;
+  color: #ffffff;
+}
+
+.mobile-settlement__resetButton {
+  height: 48px;
+  background: #eef3f8;
+  color: #415166;
+}
+
+.mobile-settlement__results {
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding-right: 2px;
+}
+
+.mobile-settlement__empty {
+  min-height: 180px;
+  border: 1px dashed #d5dce7;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  color: #7a8799;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.mobile-settlement__card {
+  border: 1px solid #e3e8f0;
+  border-radius: 20px;
+  background: #ffffff;
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.mobile-settlement__cardBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mobile-settlement__cardBar strong {
+  font-size: 15px;
+  font-weight: 900;
+  color: #1e2a3c;
+}
+
+.mobile-settlement__remove {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #d9e1ec;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #68778c;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.mobile-settlement__itemHead,
+.mobile-settlement__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.15fr) 52px 82px;
+  gap: 8px;
+  align-items: center;
+}
+
+.mobile-settlement__itemHead {
+  padding-bottom: 6px;
+  border-bottom: 1px solid #edf1f6;
+}
+
+.mobile-settlement__itemHead span {
+  font-size: 11px;
+  font-weight: 800;
+  color: #7b889a;
+}
+
+.mobile-settlement__items {
+  display: grid;
+  gap: 8px;
+}
+
+.mobile-settlement__item {
+  padding-top: 8px;
+  border-top: 1px solid #edf1f6;
+}
+
+.mobile-settlement__item:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.mobile-settlement__item strong {
+  font-size: 13px;
+  font-weight: 800;
+  color: #1e2a3c;
+}
+
+.mobile-settlement__item span {
+  font-size: 12px;
+  color: #6a788d;
+}
+
+.mobile-settlement__itemHead span,
+.mobile-settlement__item strong,
+.mobile-settlement__item span {
+  min-width: 0;
+  word-break: break-word;
+}
+
+.mobile-settlement__payment {
+  padding: 14px 16px 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.mobile-settlement__paymentSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #5c6c81;
+}
+
+.mobile-settlement__paymentSummary strong {
+  font-size: 24px;
+  font-weight: 900;
+  color: #182234;
+}
+
+.mobile-settlement__payButton {
+  height: 52px;
+  background: #9810fa;
+  color: #ffffff;
+}
+
+.mobile-settlement__footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  border-top: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.95);
+  color: #748196;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
 .refund-page {
   background: #eeeeee;
   border: 1px solid #dddddd;
@@ -1832,5 +2201,30 @@ input:focus-visible {
 
   .keyband-issue__summaryRow {
     grid-template-columns: 88px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .mobile-settlement {
+    width: 100%;
+    height: calc(100vh - 40px);
+    max-width: 100%;
+    max-height: none;
+    border-radius: 28px;
+  }
+
+  .mobile-settlement-page {
+    padding: 20px 12px;
+  }
+
+  .mobile-settlement-page__toggle {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .mobile-settlement-page__controlRow {
+    width: 100%;
+    max-width: 430px;
+    flex-direction: column;
   }
 }

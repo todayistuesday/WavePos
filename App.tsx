@@ -1,61 +1,41 @@
 import { Circle } from "lucide-react";
-import html2canvas from "html2canvas";
 import { startTransition, useEffect, useState } from "react";
 
 import { KeybandPos } from "./pages/pos/KeybandPos";
+import { MobileSettlementPage } from "./pages/pos/MobileSettlement";
 import { NormalPos } from "./pages/pos/NormalPos";
 import { posModes, topTabs } from "./pages/pos/posData";
+import { copyElementPng } from "./utils/copyPng";
 
 type CopyState = "idle" | "success" | "error";
+type AppScreen = "pos" | "mobile-settlement";
 
-async function copyPngForFigma() {
-  if (!navigator.clipboard || typeof ClipboardItem === "undefined") {
-    throw new Error("PNG 복사를 지원하지 않는 브라우저입니다.");
-  }
-
-  const target = document.querySelector(".pos-shell");
-
-  if (!(target instanceof HTMLElement)) {
-    throw new Error("스크린샷 대상을 찾을 수 없습니다.");
-  }
-
-  const canvas = await html2canvas(target, {
-    backgroundColor: "#ffffff",
-    scale: window.devicePixelRatio || 1,
-    useCORS: true,
-    logging: false,
-    scrollX: 0,
-    scrollY: 0,
-    windowWidth: target.scrollWidth,
-    windowHeight: target.scrollHeight,
-    onclone: (clonedDocument) => {
-      clonedDocument.documentElement.scrollTo(0, 0);
-      clonedDocument.body.scrollTo(0, 0);
-    },
-  });
-
-  const pngBlob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        reject(new Error("PNG 생성에 실패했습니다."));
-        return;
-      }
-      resolve(blob);
-    }, "image/png");
-  });
-
-  await navigator.clipboard.write([
-    new ClipboardItem({
-      "image/png": pngBlob,
-    }),
-  ]);
+function getAppScreenFromHash(): AppScreen {
+  return window.location.hash === "#/mobile-settlement" ? "mobile-settlement" : "pos";
 }
+
+const footerModes = [
+  { id: "general", label: "일반 포스" },
+  { id: "keyband", label: "키밴드 정산" },
+  { id: "mobile-settlement", label: "모바일 정산" },
+] as const;
 
 export default function App() {
   const [selectedTab, setSelectedTab] = useState<(typeof topTabs)[number]>(topTabs[0]);
   const [posMode, setPosMode] = useState<(typeof posModes)[number]["id"]>("general");
   const [copyState, setCopyState] = useState<CopyState>("idle");
+  const [screen, setScreen] = useState<AppScreen>(() => getAppScreenFromHash());
   const isKeybandMode = posMode === "keyband";
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setScreen(getAppScreenFromHash());
+    };
+
+    window.addEventListener("hashchange", handleHashChange);
+
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
 
   useEffect(() => {
     if (copyState === "idle") {
@@ -71,7 +51,7 @@ export default function App() {
 
   const handleCopyFigmaDesign = async () => {
     try {
-      await copyPngForFigma();
+      await copyElementPng(".pos-shell");
       setCopyState("success");
     } catch (error) {
       console.error(error);
@@ -82,6 +62,10 @@ export default function App() {
   const figmaButtonLabel =
     copyState === "success" ? "PNG 복사됨" : copyState === "error" ? "복사 실패" : "스크린샷";
   const deferredSummaryLabel = isKeybandMode ? null : "키밴드: 77,000원";
+
+  if (screen === "mobile-settlement") {
+    return <MobileSettlementPage />;
+  }
 
   return (
     <div className="pos-shell">
@@ -135,14 +119,21 @@ export default function App() {
 
         <div className="pos-footer__controls">
           <div className="pos-mode-toggle pos-mode-toggle--footer" role="tablist" aria-label="POS 모드 전환">
-            {posModes.map((mode) => (
+            {footerModes.map((mode) => (
               <button
                 key={mode.id}
                 className={`pos-mode-toggle__button${mode.id === posMode ? " is-active" : ""}`}
                 type="button"
                 role="tab"
                 aria-selected={mode.id === posMode}
-                onClick={() => setPosMode(mode.id)}
+                onClick={() => {
+                  if (mode.id === "mobile-settlement") {
+                    window.location.hash = "/mobile-settlement";
+                    return;
+                  }
+
+                  setPosMode(mode.id);
+                }}
               >
                 {mode.label}
               </button>
