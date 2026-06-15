@@ -9,7 +9,9 @@ const devicePresets = [
   { id: "android", label: "Android", sizeLabel: "360 x 800", width: 360, height: 800 },
   { id: "tablet", label: "태블릿", sizeLabel: "768 x 1024", width: 768, height: 1024 },
 ] as const;
+
 type CopyState = "idle" | "success" | "error";
+type PaymentState = "idle" | "success" | "failure";
 
 function normalizeDigits(value: string) {
   return value.replace(/\D/g, "");
@@ -33,11 +35,30 @@ function getItemDisplayAmount(price: string, quantity: number) {
   return `${(Number(price.replace(/[^0-9]/g, "")) * quantity).toLocaleString()}원`;
 }
 
+function getResultContent(paymentState: Exclude<PaymentState, "idle">) {
+  if (paymentState === "failure") {
+    return {
+      icon: "!",
+      title: "결제에 실패했습니다",
+      description: "5초 후 후불 정산 화면으로 돌아갑니다.",
+      toneClassName: "is-failure",
+    };
+  }
+
+  return {
+    icon: "✓",
+    title: "결제가 완료되었습니다",
+    description: "5초 후 후불 정산 화면으로 돌아갑니다.",
+    toneClassName: "is-success",
+  };
+}
+
 export function MobileSettlementPage() {
   const [query, setQuery] = useState("");
   const [searchedRowIds, setSearchedRowIds] = useState<string[]>([]);
   const [devicePreset, setDevicePreset] = useState<(typeof devicePresets)[number]["id"]>("ios");
   const [copyState, setCopyState] = useState<CopyState>("idle");
+  const [paymentState, setPaymentState] = useState<PaymentState>("idle");
 
   const normalizedQuery = query.trim().toLowerCase();
   const normalizedDigits = normalizeDigits(query);
@@ -46,6 +67,7 @@ export function MobileSettlementPage() {
   const currentPreset = devicePresets.find((preset) => preset.id === devicePreset) ?? devicePresets[0];
   const screenshotLabel =
     copyState === "success" ? "PNG 복사됨" : copyState === "error" ? "복사 실패" : "스크린샷";
+  const resultContent = paymentState === "idle" ? null : getResultContent(paymentState);
 
   useEffect(() => {
     if (copyState === "idle") {
@@ -58,6 +80,20 @@ export function MobileSettlementPage() {
 
     return () => window.clearTimeout(timer);
   }, [copyState]);
+
+  useEffect(() => {
+    if (paymentState === "idle") {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      setPaymentState("idle");
+      setQuery("");
+      setSearchedRowIds([]);
+    }, 5000);
+
+    return () => window.clearTimeout(timer);
+  }, [paymentState]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -77,9 +113,14 @@ export function MobileSettlementPage() {
     setSearchedRowIds((current) => [...current, ...matchedRowIds.filter((rowId) => !current.includes(rowId))]);
   };
 
-  const handleReset = () => {
+  const resetSettlement = () => {
+    setPaymentState("idle");
     setQuery("");
     setSearchedRowIds([]);
+  };
+
+  const handleReset = () => {
+    resetSettlement();
   };
 
   const handleRemoveRow = (rowId: string) => {
@@ -90,6 +131,8 @@ export function MobileSettlementPage() {
     if (results.length === 0) {
       return;
     }
+
+    setPaymentState(totalAmount >= 100000 ? "failure" : "success");
   };
 
   const handleCopyScreenshot = async () => {
@@ -128,7 +171,9 @@ export function MobileSettlementPage() {
             {screenshotLabel}
           </button>
         </div>
-        <span className="mobile-settlement-page__caption">{currentPreset.label} 기준 {currentPreset.sizeLabel}</span>
+        <span className="mobile-settlement-page__caption">
+          {currentPreset.label} 기준 {currentPreset.sizeLabel}
+        </span>
       </div>
 
       <section
@@ -146,88 +191,107 @@ export function MobileSettlementPage() {
         </header>
 
         <div className="mobile-settlement__body">
-          <section className="mobile-settlement__section">
-            <div className="mobile-settlement__sectionHead">
-              <h2>키밴드 조회</h2>
-            </div>
-
-            <form className="mobile-settlement__search" onSubmit={handleSubmit}>
-              <label className="mobile-settlement__searchField">
-                <Search size={18} />
-                <input
-                  type="text"
-                  value={query}
-                  placeholder="키밴드 번호를 입력하세요."
-                  onChange={(event) => setQuery(event.target.value)}
-                />
-              </label>
-              <div className="mobile-settlement__searchActions">
-                <button type="submit" className="mobile-settlement__searchButton">
-                  조회
-                </button>
-                <button type="button" className="mobile-settlement__resetButton" onClick={handleReset}>
-                  초기화
-                </button>
+          {resultContent ? (
+            <section className={`mobile-settlement__section mobile-settlement__section--result ${resultContent.toneClassName}`}>
+              <div className="mobile-settlement__resultContent">
+                <div className={`mobile-settlement__resultIcon ${resultContent.toneClassName}`} aria-hidden="true">
+                  {resultContent.icon}
+                </div>
+                <strong className="mobile-settlement__resultTitle">{resultContent.title}</strong>
+                <p className={`mobile-settlement__resultDescription ${resultContent.toneClassName}`}>
+                  {resultContent.description}
+                </p>
               </div>
-            </form>
-          </section>
+              <button type="button" className="mobile-settlement__secondaryButton" onClick={resetSettlement}>
+                추가 정산하기
+              </button>
+            </section>
+          ) : (
+            <>
+              <section className="mobile-settlement__section">
+                <div className="mobile-settlement__sectionHead">
+                  <h2>키밴드 조회</h2>
+                </div>
 
-          <section className="mobile-settlement__section mobile-settlement__section--results">
-            <div className="mobile-settlement__sectionHead">
-              <h2>조회 내역 리스트</h2>
-              <span>{results.length}건</span>
-            </div>
+                <form className="mobile-settlement__search" onSubmit={handleSubmit}>
+                  <label className="mobile-settlement__searchField">
+                    <Search size={18} />
+                    <input
+                      type="text"
+                      value={query}
+                      placeholder="키밴드 번호를 입력하세요"
+                      onChange={(event) => setQuery(event.target.value)}
+                    />
+                  </label>
+                  <div className="mobile-settlement__searchActions">
+                    <button type="submit" className="mobile-settlement__searchButton">
+                      조회
+                    </button>
+                    <button type="button" className="mobile-settlement__resetButton" onClick={handleReset}>
+                      초기화
+                    </button>
+                  </div>
+                </form>
+              </section>
 
-            <div className="mobile-settlement__results">
-              {results.length === 0 ? (
-                <div className="mobile-settlement__empty">조회된 키밴드 내역이 없습니다.</div>
-              ) : (
-                results.map((row) => (
-                  <article key={row.id} className="mobile-settlement__card">
-                    <div className="mobile-settlement__cardBar">
-                      <strong>{row.bandNo}</strong>
-                      <button
-                        type="button"
-                        className="mobile-settlement__remove"
-                        onClick={() => handleRemoveRow(row.id)}
-                        aria-label={`${row.bandNo} 조회 내역 삭제`}
-                      >
-                        X
-                      </button>
-                    </div>
+              <section className="mobile-settlement__section mobile-settlement__section--results">
+                <div className="mobile-settlement__sectionHead">
+                  <h2>조회 내역 리스트</h2>
+                  <span>{results.length}건</span>
+                </div>
 
-                    <div className="mobile-settlement__itemHead" role="row">
-                      <span>상품명</span>
-                      <span>권종명</span>
-                      <span>수량</span>
-                      <span>금액</span>
-                    </div>
-
-                    <div className="mobile-settlement__items">
-                      {row.items.map((item) => (
-                        <div key={item.id} className="mobile-settlement__item">
-                          <strong>{item.productName}</strong>
-                          <span>{item.ticketName}</span>
-                          <span>{item.quantity}개</span>
-                          <span>{getItemDisplayAmount(item.price, item.quantity)}</span>
+                <div className="mobile-settlement__results">
+                  {results.length === 0 ? (
+                    <div className="mobile-settlement__empty">조회된 키밴드 내역이 없습니다.</div>
+                  ) : (
+                    results.map((row) => (
+                      <article key={row.id} className="mobile-settlement__card">
+                        <div className="mobile-settlement__cardBar">
+                          <strong>{row.bandNo}</strong>
+                          <button
+                            type="button"
+                            className="mobile-settlement__remove"
+                            onClick={() => handleRemoveRow(row.id)}
+                            aria-label={`${row.bandNo} 조회 내역 제거`}
+                          >
+                            X
+                          </button>
                         </div>
-                      ))}
-                    </div>
-                  </article>
-                ))
-              )}
-            </div>
-          </section>
 
-          <section className="mobile-settlement__payment">
-            <div className="mobile-settlement__paymentSummary">
-              <span>온라인 PG 결제</span>
-              <strong>{totalAmount.toLocaleString()}원</strong>
-            </div>
-            <button type="button" className="mobile-settlement__payButton" onClick={handlePay}>
-              결제 하기
-            </button>
-          </section>
+                        <div className="mobile-settlement__itemHead" role="row">
+                          <span>상품명</span>
+                          <span>권종명</span>
+                          <span>수량</span>
+                          <span>금액</span>
+                        </div>
+
+                        <div className="mobile-settlement__items">
+                          {row.items.map((item) => (
+                            <div key={item.id} className="mobile-settlement__item">
+                              <strong>{item.productName}</strong>
+                              <span>{item.ticketName}</span>
+                              <span>{item.quantity}개</span>
+                              <span>{getItemDisplayAmount(item.price, item.quantity)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </article>
+                    ))
+                  )}
+                </div>
+              </section>
+
+              <section className="mobile-settlement__payment">
+                <div className="mobile-settlement__paymentSummary">
+                  <span>결제 예정 금액</span>
+                  <strong>{totalAmount.toLocaleString()}원</strong>
+                </div>
+                <button type="button" className="mobile-settlement__payButton" onClick={handlePay}>
+                  결제 하기
+                </button>
+              </section>
+            </>
+          )}
         </div>
 
         <footer className="mobile-settlement__footer">Copyright © smartix Corporation. All right reserved</footer>
