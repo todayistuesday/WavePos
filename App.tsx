@@ -1,6 +1,7 @@
 import { Circle } from "lucide-react";
 import { startTransition, useEffect, useState } from "react";
 
+import { KeybandUsage } from "./pages/pos/KeybandUsage";
 import { KeybandPos } from "./pages/pos/KeybandPos";
 import { MobileSettlementPage } from "./pages/pos/MobileSettlement";
 import { NormalPos } from "./pages/pos/NormalPos";
@@ -25,6 +26,7 @@ export default function App() {
   const [posMode, setPosMode] = useState<(typeof posModes)[number]["id"]>("general");
   const [copyState, setCopyState] = useState<CopyState>("idle");
   const [screen, setScreen] = useState<AppScreen>(() => getAppScreenFromHash());
+  const [isKeybandUsageModalOpen, setIsKeybandUsageModalOpen] = useState(false);
   const isKeybandMode = posMode === "keyband";
 
   useEffect(() => {
@@ -142,6 +144,14 @@ export default function App() {
 
           <button
             type="button"
+            className="pos-footer__keyband"
+            onClick={() => setIsKeybandUsageModalOpen(true)}
+          >
+            키밴드 사용
+          </button>
+
+          <button
+            type="button"
             className={`pos-footer__figma${copyState === "success" ? " is-success" : ""}${copyState === "error" ? " is-error" : ""}`}
             onClick={handleCopyFigmaDesign}
           >
@@ -153,6 +163,8 @@ export default function App() {
           </button>
         </div>
       </footer>
+
+      <KeybandUsage isOpen={isKeybandUsageModalOpen} onClose={() => setIsKeybandUsageModalOpen(false)} />
     </div>
   );
 }

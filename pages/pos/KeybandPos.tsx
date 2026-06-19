@@ -534,18 +534,6 @@ export function KeybandPos() {
                   >
                     키밴드 추가
                   </button>
-                  <button
-                    type="button"
-                    className="keyband-issue__ghost"
-                    onClick={() =>
-                      setIssueBandFields((current) =>
-                        current.length > 1 ? current.slice(0, -1) : current,
-                      )
-                    }
-                    disabled={issueBandFields.length <= 1}
-                  >
-                    마지막 제거
-                  </button>
                 </div>
               </div>
 

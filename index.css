@@ -1273,6 +1273,19 @@ input:focus-visible {
   transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
 }
 
+.pos-footer__keyband {
+  height: 52px;
+  min-width: 148px;
+  padding: 0 20px;
+  border-radius: 12px;
+  border: 2px solid #d7dce4;
+  background: #fff;
+  color: #222b36;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
 .pos-footer__figma.is-success {
   border-color: #22a447;
   color: #146d2d;
@@ -1296,6 +1309,226 @@ input:focus-visible {
   font-size: 16px;
   font-weight: 800;
   cursor: pointer;
+}
+
+.keyband-usage {
+  width: min(640px, 100%);
+  max-height: min(760px, calc(100vh - 48px));
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.keyband-usage__search {
+  display: grid;
+  gap: 12px;
+}
+
+.keyband-usage__searchField {
+  height: 56px;
+  border: 2px solid #d7dce3;
+  border-radius: 14px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  color: #718092;
+}
+
+.keyband-usage__searchField input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #1d2430;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.keyband-usage__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.keyband-usage__body {
+  min-height: 0;
+  display: flex;
+}
+
+.keyband-usage__resultBox {
+  display: grid;
+  gap: 10px;
+  padding: 20px;
+  border: 1px solid #dde3eb;
+  border-radius: 16px;
+  background: #f7f9fc;
+  min-height: 0;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  padding-right: 16px;
+}
+
+.keyband-usage__card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #e1e6ee;
+}
+
+.keyband-usage__cardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.keyband-usage__cardHead div {
+  display: grid;
+  gap: 4px;
+}
+
+.keyband-usage__cardHead strong {
+  color: #202733;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.keyband-usage__cardHead p {
+  margin: 0;
+  color: #6d7787;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.keyband-usage__cardHead span {
+  color: #6d7787;
+  font-size: 16px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.keyband-usage__section {
+  display: grid;
+  gap: 10px;
+}
+
+.keyband-usage__sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.keyband-usage__sectionHead h3 {
+  margin: 0;
+  color: #202733;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.keyband-usage__sectionHead span {
+  color: #7a8697;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.keyband-usage__history {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.keyband-usage__history div {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  gap: 8px 12px;
+  align-items: start;
+}
+
+.keyband-usage__history dt {
+  color: #7a8697;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.keyband-usage__history dd {
+  margin: 0;
+  color: #202733;
+  font-size: 14px;
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.keyband-usage__ticketTable {
+  border: 1px solid #e1e6ee;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.keyband-usage__ticketHead,
+.keyband-usage__ticketRow {
+  display: grid;
+  grid-template-columns: minmax(100px, 1fr) minmax(92px, 0.9fr) minmax(136px, 1.05fr) 52px 88px;
+  gap: 10px;
+  align-items: center;
+}
+
+.keyband-usage__ticketHead {
+  padding: 10px 12px;
+  background: #f1f5f9;
+  color: #7a8697;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.keyband-usage__ticketBody {
+  display: grid;
+}
+
+.keyband-usage__ticketRow {
+  padding: 12px;
+  color: #202733;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.keyband-usage__ticketRow + .keyband-usage__ticketRow {
+  border-top: 1px solid #edf2f7;
+}
+
+.keyband-usage__ticketHead span,
+.keyband-usage__ticketRow span {
+  min-width: 0;
+  word-break: break-word;
+}
+
+.keyband-usage__ticketAction {
+  height: 34px;
+  border: 0;
+  border-radius: 10px;
+  background: #9810fa;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.keyband-usage__empty {
+  min-height: 116px;
+  border: 1px dashed #d2dae6;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  color: #6d7787;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
 }
 
 .mobile-settlement-page {
@@ -2256,6 +2489,7 @@ input:focus-visible {
   }
 
   .pos-mode-toggle--footer,
+  .pos-footer__keyband,
   .pos-footer__figma,
   .pos-footer__drawer {
     min-width: 0;
