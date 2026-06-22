@@ -1312,7 +1312,7 @@ input:focus-visible {
 }
 
 .keyband-usage {
-  width: min(640px, 100%);
+  width: min(860px, calc(100vw - 32px));
   max-height: min(760px, calc(100vh - 48px));
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr);
@@ -1360,14 +1360,11 @@ input:focus-visible {
 .keyband-usage__resultBox {
   display: grid;
   gap: 10px;
-  padding: 20px;
-  border: 1px solid #dde3eb;
-  border-radius: 16px;
-  background: #f7f9fc;
+  padding: 0;
   min-height: 0;
   overflow-y: auto;
   flex: 1 1 auto;
-  padding-right: 16px;
+  padding-right: 4px;
 }
 
 .keyband-usage__card {
@@ -1381,8 +1378,7 @@ input:focus-visible {
 
 .keyband-usage__cardHead {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  align-items: center;
   gap: 12px;
 }
 
@@ -1391,22 +1387,21 @@ input:focus-visible {
   gap: 4px;
 }
 
+.keyband-usage__cardTitle {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+}
+
 .keyband-usage__cardHead strong {
   color: #202733;
   font-size: 18px;
   font-weight: 800;
 }
 
-.keyband-usage__cardHead p {
-  margin: 0;
+.keyband-usage__cardTitle span {
   color: #6d7787;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.keyband-usage__cardHead span {
-  color: #6d7787;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
   white-space: nowrap;
 }
@@ -1473,8 +1468,8 @@ input:focus-visible {
 .keyband-usage__ticketHead,
 .keyband-usage__ticketRow {
   display: grid;
-  grid-template-columns: minmax(100px, 1fr) minmax(92px, 0.9fr) minmax(136px, 1.05fr) 52px 88px;
-  gap: 10px;
+  grid-template-columns: minmax(150px, 1.46fr) minmax(156px, 1.38fr) minmax(170px, 1.28fr) minmax(84px, 0.6fr) minmax(102px, 0.68fr);
+  gap: 12px;
   align-items: center;
 }
 
@@ -1507,8 +1502,64 @@ input:focus-visible {
   word-break: break-word;
 }
 
+.keyband-usage__col {
+  min-width: 0;
+}
+
+.keyband-usage__col--product,
+.keyband-usage__col--ticket,
+.keyband-usage__col--session {
+  justify-self: stretch;
+  text-align: left;
+}
+
+.keyband-usage__col--quantity,
+.keyband-usage__col--action {
+  justify-self: center;
+  text-align: center;
+}
+
+.keyband-usage__col--quantity {
+  width: 100%;
+}
+
+.keyband-usage__ticketControls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.keyband-usage__quantityPicker {
+  display: flex;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.keyband-usage__quantityPicker select {
+  width: 64px;
+  height: 34px;
+  border: 1px solid #d7dce3;
+  border-radius: 10px;
+  background: #fff;
+  color: #202733;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 0 10px;
+}
+
+.keyband-usage__ticketActions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
 .keyband-usage__ticketAction {
   height: 34px;
+  min-width: 56px;
   border: 0;
   border-radius: 10px;
   background: #9810fa;
@@ -1516,6 +1567,27 @@ input:focus-visible {
   font-size: 12px;
   font-weight: 800;
   cursor: pointer;
+  padding: 0 10px;
+}
+
+.keyband-usage__ticketAction--used {
+  background: #8b95a1;
+}
+
+.keyband-usage__ticketAction--partial {
+  background: #2563eb;
+}
+
+.keyband-usage__ticketAction:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.keyband-usage__guide {
+  margin: 2px 4px 0;
+  color: #6d7787;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .keyband-usage__empty {

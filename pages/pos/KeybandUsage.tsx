@@ -1,7 +1,7 @@
 import { Search, X } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 
-import { keybandRows } from "./posData";
+import { keybandRows, keybandUsageRows } from "./posData";
 
 type KeybandUsageProps = {
   isOpen: boolean;
@@ -12,39 +12,64 @@ function normalizeDigits(value: string) {
   return value.replace(/\D/g, "");
 }
 
-function getRowAmount(row: (typeof keybandRows)[number]) {
-  return row.items.reduce(
-    (sum, item) => sum + Number(item.price.replace(/[^0-9]/g, "")) * item.quantity,
-    0,
-  );
-}
+type UsageRow = {
+  id: string;
+  bandNo: string;
+  reservationNo?: string;
+  phone?: string;
+  items: ReadonlyArray<{
+    id: string;
+    productName: string;
+    ticketName: string;
+    session: string;
+    quantity: number;
+  }>;
+};
 
-function matchesRow(row: (typeof keybandRows)[number], query: string, queryDigits: string) {
-  const textMatched = [row.bandNo, row.reservationNo].some((value) => value.toLowerCase().includes(query));
-  const phoneMatched = queryDigits.length > 0 && normalizeDigits(row.phone) === queryDigits;
+function matchesRow(row: UsageRow, query: string, queryDigits: string) {
+  const itemMatched = row.items.some((item) =>
+    [item.productName, item.ticketName, item.session].some((value) => value.toLowerCase().includes(query)),
+  );
+  const textMatched =
+    [row.bandNo, row.reservationNo ?? ""].some((value) => value.toLowerCase().includes(query)) || itemMatched;
+  const phoneMatched =
+    queryDigits.length > 0 &&
+    [row.bandNo, row.phone ?? ""].some((value) => normalizeDigits(value) === queryDigits);
 
   return textMatched || phoneMatched;
-}
-
-function getUsageHistory(row: (typeof keybandRows)[number]) {
-  return [
-    { label: "사용 시간", value: row.time },
-    { label: "예약 번호", value: row.reservationNo },
-    { label: "현재 상태", value: row.status },
-    { label: "이용 요약", value: row.detail },
-  ];
 }
 
 export function KeybandUsage({ isOpen, onClose }: KeybandUsageProps) {
   const [query, setQuery] = useState("");
   const [searchedRowIds, setSearchedRowIds] = useState<string[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
+  const [usedTicketQuantities, setUsedTicketQuantities] = useState<Record<string, number>>({});
+  const [selectedUsageQuantities, setSelectedUsageQuantities] = useState<Record<string, number>>({});
 
   const normalizedQuery = query.trim().toLowerCase();
   const normalizedDigits = normalizeDigits(query);
+  const searchableRows = useMemo<UsageRow[]>(
+    () => [
+      ...keybandRows.map((row) => ({
+        id: row.id,
+        bandNo: row.bandNo,
+        reservationNo: row.reservationNo,
+        phone: row.phone,
+        items: row.items.map((item) => ({
+          id: item.id,
+          productName: item.productName,
+          ticketName: item.ticketName,
+          session: item.session,
+          quantity: item.quantity,
+        })),
+      })),
+      ...keybandUsageRows,
+    ],
+    [],
+  );
   const results = useMemo(
-    () => keybandRows.filter((row) => searchedRowIds.includes(row.id)),
-    [searchedRowIds],
+    () => searchableRows.filter((row) => searchedRowIds.includes(row.id)),
+    [searchableRows, searchedRowIds],
   );
 
   useEffect(() => {
@@ -76,7 +101,7 @@ export function KeybandUsage({ isOpen, onClose }: KeybandUsageProps) {
       return;
     }
 
-    const matchedRowIds = keybandRows
+    const matchedRowIds = searchableRows
       .filter((row) => matchesRow(row, normalizedQuery, normalizedDigits))
       .map((row) => row.id);
 
@@ -88,6 +113,62 @@ export function KeybandUsage({ isOpen, onClose }: KeybandUsageProps) {
     setQuery("");
     setHasSearched(false);
     setSearchedRowIds([]);
+  };
+
+  const handleSelectUsageQuantity = (ticketId: string, value: number) => {
+    setSelectedUsageQuantities((prev) => ({
+      ...prev,
+      [ticketId]: value,
+    }));
+  };
+
+  const handleUseTicket = (ticketId: string, totalQuantity: number) => {
+    const usedQuantity = usedTicketQuantities[ticketId] ?? 0;
+    const isFullyUsed = usedQuantity >= totalQuantity;
+    const remainingQuantity = totalQuantity - usedQuantity;
+
+    if (isFullyUsed) {
+      const shouldRestore = window.confirm("사용 완료된 항목을 복구하시겠습니까?");
+
+      if (!shouldRestore) {
+        return;
+      }
+
+      setUsedTicketQuantities((prev) => {
+        const next = { ...prev };
+        delete next[ticketId];
+        return next;
+      });
+      setSelectedUsageQuantities((prev) => {
+        const next = { ...prev };
+        delete next[ticketId];
+        return next;
+      });
+      return;
+    }
+
+    if (remainingQuantity <= 0) {
+      return;
+    }
+
+    const selectedQuantity = Math.min(selectedUsageQuantities[ticketId] ?? remainingQuantity, remainingQuantity);
+
+    setUsedTicketQuantities((prev) => ({
+      ...prev,
+      [ticketId]: usedQuantity + selectedQuantity,
+    }));
+    setSelectedUsageQuantities((prev) => {
+      const nextRemainingQuantity = remainingQuantity - selectedQuantity;
+      const nextSelectedQuantity =
+        nextRemainingQuantity > 0
+          ? Math.min(prev[ticketId] ?? nextRemainingQuantity, nextRemainingQuantity)
+          : selectedQuantity;
+
+      return {
+        ...prev,
+        [ticketId]: nextSelectedQuantity,
+      };
+    });
   };
 
   return (
@@ -129,60 +210,94 @@ export function KeybandUsage({ isOpen, onClose }: KeybandUsageProps) {
           <div className="keyband-usage__resultBox">
             {hasSearched ? (
               results.length > 0 ? (
-                results.map((row) => (
-                  <article key={row.id} className="keyband-usage__card">
-                    <div className="keyband-usage__cardHead">
-                      <div>
-                        <strong>{row.bandNo}</strong>
-                        <p>{row.name}</p>
+                <>
+                  {results.map((row) => (
+                    <article key={row.id} className="keyband-usage__card">
+                      <div className="keyband-usage__cardHead">
+                        <div className="keyband-usage__cardTitle">
+                          <strong>{row.bandNo}</strong>
+                          <span>사용 가능한 티켓</span>
+                        </div>
                       </div>
-                      <span>{getRowAmount(row).toLocaleString()}원</span>
-                    </div>
-
-                    <section className="keyband-usage__section">
-                      <div className="keyband-usage__sectionHead">
-                        <h3>사용 이력</h3>
-                      </div>
-                      <dl className="keyband-usage__history">
-                        {getUsageHistory(row).map((entry) => (
-                          <div key={`${row.id}-${entry.label}`}>
-                            <dt>{entry.label}</dt>
-                            <dd>{entry.value}</dd>
+                      <section className="keyband-usage__section">
+                        <div className="keyband-usage__sectionHead">
+                          <span>{row.items.length}건</span>
+                        </div>
+                        <div className="keyband-usage__ticketTable">
+                          <div className="keyband-usage__ticketHead">
+                            <span className="keyband-usage__col keyband-usage__col--product">상품명</span>
+                            <span className="keyband-usage__col keyband-usage__col--ticket">권종</span>
+                            <span className="keyband-usage__col keyband-usage__col--session">이용 시간</span>
+                            <span className="keyband-usage__col keyband-usage__col--quantity">수량</span>
+                            <span className="keyband-usage__col keyband-usage__col--action">처리</span>
                           </div>
-                        ))}
-                      </dl>
-                    </section>
+                          <div className="keyband-usage__ticketBody">
+                            {row.items.map((item) => {
+                              const usedQuantity = usedTicketQuantities[item.id] ?? 0;
+                              const remainingQuantity = item.quantity - usedQuantity;
+                              const isPartiallyUsed = usedQuantity > 0 && usedQuantity < item.quantity;
+                              const isFullyUsed = usedQuantity >= item.quantity;
+                              const maxSelectableQuantity = isFullyUsed
+                                ? selectedUsageQuantities[item.id] ?? item.quantity
+                                : Math.max(remainingQuantity, 1);
+                              const selectedQuantity = Math.min(
+                                selectedUsageQuantities[item.id] ?? maxSelectableQuantity,
+                                maxSelectableQuantity,
+                              );
+                              const actionLabel = isFullyUsed
+                                ? "사용 완료"
+                                : isPartiallyUsed
+                                  ? "부분 사용"
+                                  : "사용 처리";
 
-                    <section className="keyband-usage__section">
-                      <div className="keyband-usage__sectionHead">
-                        <h3>사용 가능한 티켓</h3>
-                        <span>{row.items.length}건</span>
-                      </div>
-                      <div className="keyband-usage__ticketTable">
-                        <div className="keyband-usage__ticketHead">
-                          <span>상품명</span>
-                          <span>권종</span>
-                          <span>이용 시간</span>
-                          <span>수량</span>
-                          <span>처리</span>
+                              return (
+                                <div key={item.id} className="keyband-usage__ticketRow">
+                                  <span className="keyband-usage__col keyband-usage__col--product">{item.productName}</span>
+                                  <span className="keyband-usage__col keyband-usage__col--ticket">{item.ticketName}</span>
+                                  <span className="keyband-usage__col keyband-usage__col--session">{item.session}</span>
+                                  <div className="keyband-usage__col keyband-usage__col--quantity keyband-usage__quantityPicker">
+                                    <select
+                                      aria-label={`${item.productName} 사용 수량`}
+                                      value={selectedQuantity}
+                                      onChange={(event) =>
+                                        handleSelectUsageQuantity(item.id, Number(event.target.value))
+                                      }
+                                      disabled={isFullyUsed}
+                                    >
+                                      {Array.from({ length: maxSelectableQuantity }, (_, index) => {
+                                        const option = index + 1;
+
+                                        return (
+                                          <option key={`${item.id}-${option}`} value={option}>
+                                            {option}개
+                                          </option>
+                                        );
+                                      })}
+                                    </select>
+                                  </div>
+                                  <div className="keyband-usage__col keyband-usage__col--action keyband-usage__ticketControls">
+                                    <div className="keyband-usage__ticketActions">
+                                      <button
+                                        type="button"
+                                        className={`keyband-usage__ticketAction${isFullyUsed ? " keyband-usage__ticketAction--used" : isPartiallyUsed ? " keyband-usage__ticketAction--partial" : ""}`}
+                                        onClick={() => handleUseTicket(item.id, item.quantity)}
+                                      >
+                                        {actionLabel}
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
-                        <div className="keyband-usage__ticketBody">
-                          {row.items.map((item) => (
-                            <div key={item.id} className="keyband-usage__ticketRow">
-                              <span>{item.productName}</span>
-                              <span>{item.ticketName}</span>
-                              <span>{item.session}</span>
-                              <span>{item.quantity}개</span>
-                              <button type="button" className="keyband-usage__ticketAction">
-                                사용 처리
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </section>
-                  </article>
-                ))
+                      </section>
+                    </article>
+                  ))}
+                  <p className="keyband-usage__guide">
+                    ※ 수량이 2개 이상인 항목은 남은 수량 안에서 필요한 개수만 선택해 사용 처리할 수 있습니다.
+                  </p>
+                </>
               ) : (
                 <div className="keyband-usage__empty">일치하는 키밴드 정보가 없습니다.</div>
               )

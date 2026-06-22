@@ -521,20 +521,6 @@ export function KeybandPos() {
             <div className="keyband-issue__field">
               <div className="keyband-issue__fieldHead">
                 <span>보유 키밴드 스캔</span>
-                <div className="keyband-issue__fieldActions">
-                  <button
-                    type="button"
-                    className="keyband-issue__ghost"
-                    onClick={() =>
-                      setIssueBandFields((current) => [
-                        ...current,
-                        { id: `issue-band-${current.length + 1}`, value: "" },
-                      ])
-                    }
-                  >
-                    키밴드 추가
-                  </button>
-                </div>
               </div>
 
               <div className="keyband-issue__fieldList">
@@ -567,7 +553,7 @@ export function KeybandPos() {
             </div>
 
             <div className="keyband-issue__hint">
-              기본 {getRequiredBandCount(currentIssueTarget)}개가 준비되며, 현장 상황에 따라 키밴드 칸을 추가하거나 제거할 수 있습니다.
+              기본 {getRequiredBandCount(currentIssueTarget)}개의 키밴드를 순서대로 스캔해 주세요.
             </div>
 
             {issueError ? <div className="keyband-issue__error">{issueError}</div> : null}

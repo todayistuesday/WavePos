@@ -299,4 +299,40 @@ export const unmatchedKeybandTickets = [
   },
 ] as const;
 
+export const keybandUsageRows = [
+  {
+    id: "usage-kb-2001",
+    bandNo: "KB-2001",
+    items: [
+      {
+        id: "usage-kb-2001-ticket-1",
+        productName: "미오코스타존 (대인) 평일 입장권",
+        session: "-",
+        ticketName: "미오코스타(대인)",
+        quantity: 2,
+      },
+    ],
+  },
+  {
+    id: "usage-kb-2011",
+    bandNo: "KB-2011",
+    items: [
+      {
+        id: "usage-kb-2011-ticket-1",
+        productName: "미오코스타존 (대인) 평일 입장권",
+        session: "10:00 ~ 20:00",
+        ticketName: "미오코스타(대인)",
+        quantity: 2,
+      },
+      {
+        id: "usage-kb-2011-ticket-2",
+        productName: "구명자켓",
+        session: "퇴장 시 까지",
+        ticketName: "구명자켓",
+        quantity: 2,
+      },
+    ],
+  },
+] as const;
+
 export const availableKeybands = ["KB-2001", "KB-2002", "KB-2003", "KB-2004"] as const;
