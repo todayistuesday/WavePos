@@ -26,6 +26,11 @@ type UsageRow = {
   }>;
 };
 
+const CURRENT_COUNTER_NO = "05";
+const ALLOWED_PRODUCT_NAMES_BY_COUNTER: Record<string, readonly string[]> = {
+  "05": ["서핑장비", "타월"],
+};
+
 function matchesRow(row: UsageRow, query: string, queryDigits: string) {
   const itemMatched = row.items.some((item) =>
     [item.productName, item.ticketName, item.session].some((value) => value.toLowerCase().includes(query)),
@@ -37,6 +42,16 @@ function matchesRow(row: UsageRow, query: string, queryDigits: string) {
     [row.bandNo, row.phone ?? ""].some((value) => normalizeDigits(value) === queryDigits);
 
   return textMatched || phoneMatched;
+}
+
+function isUsableProductAtCounter(productName: string, counterNo: string) {
+  const allowedProducts = ALLOWED_PRODUCT_NAMES_BY_COUNTER[counterNo];
+
+  if (!allowedProducts) {
+    return true;
+  }
+
+  return allowedProducts.includes(productName);
 }
 
 export function KeybandUsage({ isOpen, onClose }: KeybandUsageProps) {
@@ -122,7 +137,12 @@ export function KeybandUsage({ isOpen, onClose }: KeybandUsageProps) {
     }));
   };
 
-  const handleUseTicket = (ticketId: string, totalQuantity: number) => {
+  const handleUseTicket = (ticketId: string, totalQuantity: number, productName: string) => {
+    if (!isUsableProductAtCounter(productName, CURRENT_COUNTER_NO)) {
+      window.alert("해당 창구에서 사용 처리 불가한 티켓입니다.");
+      return;
+    }
+
     const usedQuantity = usedTicketQuantities[ticketId] ?? 0;
     const isFullyUsed = usedQuantity >= totalQuantity;
     const remainingQuantity = totalQuantity - usedQuantity;
@@ -233,6 +253,10 @@ export function KeybandUsage({ isOpen, onClose }: KeybandUsageProps) {
                           </div>
                           <div className="keyband-usage__ticketBody">
                             {row.items.map((item) => {
+                              const isUsableAtCurrentCounter = isUsableProductAtCounter(
+                                item.productName,
+                                CURRENT_COUNTER_NO,
+                              );
                               const usedQuantity = usedTicketQuantities[item.id] ?? 0;
                               const remainingQuantity = item.quantity - usedQuantity;
                               const isPartiallyUsed = usedQuantity > 0 && usedQuantity < item.quantity;
@@ -249,6 +273,8 @@ export function KeybandUsage({ isOpen, onClose }: KeybandUsageProps) {
                                 : isPartiallyUsed
                                   ? "부분 사용"
                                   : "사용 처리";
+
+                              const blockedActionLabel = isUsableAtCurrentCounter ? actionLabel : "처리 불가";
 
                               return (
                                 <div key={item.id} className="keyband-usage__ticketRow">
@@ -279,10 +305,24 @@ export function KeybandUsage({ isOpen, onClose }: KeybandUsageProps) {
                                     <div className="keyband-usage__ticketActions">
                                       <button
                                         type="button"
-                                        className={`keyband-usage__ticketAction${isFullyUsed ? " keyband-usage__ticketAction--used" : isPartiallyUsed ? " keyband-usage__ticketAction--partial" : ""}`}
-                                        onClick={() => handleUseTicket(item.id, item.quantity)}
+                                        className={`keyband-usage__ticketAction${
+                                          !isUsableAtCurrentCounter
+                                            ? " keyband-usage__ticketAction--blocked"
+                                            : isFullyUsed
+                                              ? " keyband-usage__ticketAction--used"
+                                              : isPartiallyUsed
+                                                ? " keyband-usage__ticketAction--partial"
+                                                : ""
+                                        }`}
+                                        onClick={() => handleUseTicket(item.id, item.quantity, item.productName)}
+                                        aria-disabled={!isUsableAtCurrentCounter}
+                                        title={
+                                          !isUsableAtCurrentCounter
+                                            ? "해당 창구에서 사용 처리 불가한 티켓입니다."
+                                            : undefined
+                                        }
                                       >
-                                        {actionLabel}
+                                        {blockedActionLabel}
                                       </button>
                                     </div>
                                   </div>
