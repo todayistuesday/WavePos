@@ -36,10 +36,25 @@ function getDisplayAmount(price: string, quantity: number) {
   return `${(Number(price.replace(/[^0-9]/g, "")) * quantity).toLocaleString()}원`;
 }
 
-type SourceKeybandRow = (typeof keybandRows)[number];
-type KeybandRowItem = SourceKeybandRow["items"][number];
-type KeybandRow = Omit<SourceKeybandRow, "status" | "items"> & {
+type KeybandRowItem = {
+  id: string;
+  productName: string;
+  session: string;
+  ticketName: string;
+  price: string;
+  quantity: number;
+};
+
+type KeybandRow = {
+  id: string;
+  bandNo: string;
+  reservationNo: string;
+  phone: string;
+  name: string;
+  time: string;
+  amount: string;
   status: string;
+  detail: string;
   items: ReadonlyArray<KeybandRowItem>;
 };
 type PendingKeybandTicket = (typeof unmatchedKeybandTickets)[number];
@@ -177,16 +192,15 @@ export function KeybandPos() {
   );
 
   const cartItems = useMemo<CheckoutItem[]>(() => {
-    return keybandCartItemIds
-      .map((id) => {
+    return keybandCartItemIds.reduce<CheckoutItem[]>((items, id) => {
         const row = trackedRows.find((keybandRow) => keybandRow.items.some((item) => item.id === id));
         const item = row?.items.find((rowItem) => rowItem.id === id);
 
         if (!row || !item) {
-          return null;
+          return items;
         }
 
-        return {
+        items.push({
           id: item.id,
           title: item.productName,
           time: item.session,
@@ -195,9 +209,10 @@ export function KeybandPos() {
           quantity: item.quantity,
           groupId: row.bandNo,
           groupLabel: row.bandNo,
-        };
-      })
-      .filter((item): item is CheckoutItem => Boolean(item));
+        });
+
+        return items;
+      }, []);
   }, [trackedRows, keybandCartItemIds]);
 
   const checkoutTotal = cartItems.reduce((sum, item) => sum + getItemAmount(item), 0);
