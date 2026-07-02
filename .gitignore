@@ -6,3 +6,4 @@ dist/
 .env.local
 .omx/
 /postpaid-settlement/
+.worktree/
