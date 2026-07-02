@@ -1,8 +1,8 @@
 import { Check, Search } from "lucide-react";
 import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
 
-import { keybandRows } from "./posData";
 import { copyElementPng } from "../../utils/copyPng";
+import { keybandRows } from "./posData";
 
 const devicePresets = [
   { id: "ios", label: "iOS", sizeLabel: "390 x 844", width: 390, height: 844 },
@@ -10,6 +10,41 @@ const devicePresets = [
   { id: "tablet", label: "태블릿", sizeLabel: "768 x 1024", width: 768, height: 1024 },
 ] as const;
 
+const onlinePostpaidReservationNo = "RS26000021603";
+
+const onlinePostpaidMockRow = {
+  id: "kb-26000021603",
+  bandNo: "KB-2603",
+  reservationNo: onlinePostpaidReservationNo,
+  phone: "010-2600-2160",
+  name: "온라인 후불",
+  time: "16:24",
+  amount: "42,000원",
+  status: "정산 가능",
+  detail: "모바일 후불 정산용 예매",
+  items: [
+    {
+      id: "kb-26000021603-food",
+      productName: "스마트 레스토랑",
+      session: "12:00 ~ 18:00",
+      ticketName: "돈가스",
+      price: "18,000원",
+      quantity: 1,
+    },
+    {
+      id: "kb-26000021603-admission",
+      productName: "테마파크 입장권",
+      session: "00:00 ~ 00:00",
+      ticketName: "소인 입장권",
+      price: "24,000원",
+      quantity: 1,
+    },
+  ],
+} as const;
+
+const settlementRows = [...keybandRows, onlinePostpaidMockRow] as const;
+
+type SettlementRow = (typeof settlementRows)[number];
 type CopyState = "idle" | "success" | "error";
 type PaymentState = "idle" | "success" | "failure";
 
@@ -17,14 +52,21 @@ function normalizeDigits(value: string) {
   return value.replace(/\D/g, "");
 }
 
-function getRowAmount(row: (typeof keybandRows)[number]) {
+function getPrefilledReservationNoFromHash() {
+  const rawHash = window.location.hash.replace(/^#/, "");
+  const [, queryString = ""] = rawHash.split("?");
+  const params = new URLSearchParams(queryString);
+  return params.get("reservationNo")?.trim() ?? "";
+}
+
+function getRowAmount(row: SettlementRow) {
   return row.items.reduce(
     (sum, item) => sum + Number(item.price.replace(/[^0-9]/g, "")) * item.quantity,
     0,
   );
 }
 
-function matchesRow(row: (typeof keybandRows)[number], query: string, queryDigits: string) {
+function matchesRow(row: SettlementRow, query: string, queryDigits: string) {
   const textMatched = [row.bandNo, row.reservationNo].some((value) => value.toLowerCase().includes(query));
   const phoneMatched = queryDigits.length > 0 && normalizeDigits(row.phone) === queryDigits;
 
@@ -38,23 +80,24 @@ function getItemDisplayAmount(price: string, quantity: number) {
 function getResultContent(paymentState: Exclude<PaymentState, "idle">) {
   if (paymentState === "failure") {
     return {
-      icon: "failure",
+      icon: "failure" as const,
       title: "결제에 실패했습니다",
-      description: "4초 후 후불 정산 화면으로 돌아갑니다.",
+      description: "4초 후 모바일 정산 화면으로 돌아갑니다.",
       toneClassName: "is-failure",
     };
   }
 
   return {
-    icon: "success",
+    icon: "success" as const,
     title: "결제가 완료되었습니다",
-    description: "4초 후 후불 정산 화면으로 돌아갑니다.",
+    description: "4초 후 모바일 정산 화면으로 돌아갑니다.",
     toneClassName: "is-success",
   };
 }
 
 export function MobileSettlementPage() {
-  const [query, setQuery] = useState("");
+  const prefilledReservationNo = getPrefilledReservationNoFromHash();
+  const [query, setQuery] = useState(prefilledReservationNo);
   const [searchedRowIds, setSearchedRowIds] = useState<string[]>([]);
   const [devicePreset, setDevicePreset] = useState<(typeof devicePresets)[number]["id"]>("ios");
   const [copyState, setCopyState] = useState<CopyState>("idle");
@@ -62,12 +105,28 @@ export function MobileSettlementPage() {
 
   const normalizedQuery = query.trim().toLowerCase();
   const normalizedDigits = normalizeDigits(query);
-  const results = keybandRows.filter((row) => searchedRowIds.includes(row.id));
+  const results = settlementRows.filter((row) => searchedRowIds.includes(row.id));
   const totalAmount = results.reduce((sum, row) => sum + getRowAmount(row), 0);
   const currentPreset = devicePresets.find((preset) => preset.id === devicePreset) ?? devicePresets[0];
   const screenshotLabel =
     copyState === "success" ? "PNG 복사됨" : copyState === "error" ? "복사 실패" : "스크린샷";
   const resultContent = paymentState === "idle" ? null : getResultContent(paymentState);
+  const isPrefilledReservation = prefilledReservationNo.length > 0;
+
+  useEffect(() => {
+    if (!isPrefilledReservation) {
+      return;
+    }
+
+    const lockedQuery = prefilledReservationNo;
+    const lockedDigits = normalizeDigits(lockedQuery);
+    const matchedRowIds = settlementRows
+      .filter((row) => matchesRow(row, lockedQuery.toLowerCase(), lockedDigits))
+      .map((row) => row.id);
+
+    setQuery(lockedQuery);
+    setSearchedRowIds(matchedRowIds);
+  }, [isPrefilledReservation, prefilledReservationNo]);
 
   useEffect(() => {
     if (copyState === "idle") {
@@ -88,21 +147,38 @@ export function MobileSettlementPage() {
 
     const timer = window.setTimeout(() => {
       setPaymentState("idle");
+
+      if (isPrefilledReservation) {
+        const lockedQuery = prefilledReservationNo;
+        const lockedDigits = normalizeDigits(lockedQuery);
+        const matchedRowIds = settlementRows
+          .filter((row) => matchesRow(row, lockedQuery.toLowerCase(), lockedDigits))
+          .map((row) => row.id);
+
+        setQuery(lockedQuery);
+        setSearchedRowIds(matchedRowIds);
+        return;
+      }
+
       setQuery("");
       setSearchedRowIds([]);
     }, 4000);
 
     return () => window.clearTimeout(timer);
-  }, [paymentState]);
+  }, [isPrefilledReservation, paymentState, prefilledReservationNo]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (isPrefilledReservation) {
+      return;
+    }
 
     if (!normalizedQuery && !normalizedDigits) {
       return;
     }
 
-    const matchedRowIds = keybandRows
+    const matchedRowIds = settlementRows
       .filter((row) => matchesRow(row, normalizedQuery, normalizedDigits))
       .map((row) => row.id);
 
@@ -115,15 +191,28 @@ export function MobileSettlementPage() {
 
   const resetSettlement = () => {
     setPaymentState("idle");
+
+    if (isPrefilledReservation) {
+      const lockedQuery = prefilledReservationNo;
+      const lockedDigits = normalizeDigits(lockedQuery);
+      const matchedRowIds = settlementRows
+        .filter((row) => matchesRow(row, lockedQuery.toLowerCase(), lockedDigits))
+        .map((row) => row.id);
+
+      setQuery(lockedQuery);
+      setSearchedRowIds(matchedRowIds);
+      return;
+    }
+
     setQuery("");
     setSearchedRowIds([]);
   };
 
-  const handleReset = () => {
-    resetSettlement();
-  };
-
   const handleRemoveRow = (rowId: string) => {
+    if (isPrefilledReservation) {
+      return;
+    }
+
     setSearchedRowIds((current) => current.filter((currentRowId) => currentRowId !== rowId));
   };
 
@@ -187,7 +276,7 @@ export function MobileSettlementPage() {
         }
       >
         <header className="mobile-settlement__header">
-          <strong id="mobile-settlement-title">키밴드 후불 정산</strong>
+          <strong id="mobile-settlement-title">모바일 후불 정산</strong>
         </header>
 
         <div className={`mobile-settlement__body${resultContent ? " mobile-settlement__body--result" : ""}`}>
@@ -227,6 +316,7 @@ export function MobileSettlementPage() {
                     <input
                       type="text"
                       value={query}
+                      readOnly={isPrefilledReservation}
                       placeholder="키밴드 번호를 입력하세요"
                       onChange={(event) => setQuery(event.target.value)}
                     />
@@ -235,7 +325,7 @@ export function MobileSettlementPage() {
                     <button type="submit" className="mobile-settlement__searchButton">
                       조회
                     </button>
-                    <button type="button" className="mobile-settlement__resetButton" onClick={handleReset}>
+                    <button type="button" className="mobile-settlement__resetButton" onClick={resetSettlement}>
                       초기화
                     </button>
                   </div>
@@ -302,7 +392,7 @@ export function MobileSettlementPage() {
           )}
         </div>
 
-        <footer className="mobile-settlement__footer">Copyright © smartix Corporation. All right reserved</footer>
+        <footer className="mobile-settlement__footer">Copyright ⓒ smartix Corporation. All right reserved</footer>
       </section>
     </main>
   );

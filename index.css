@@ -2641,3 +2641,544 @@ input:focus-visible {
     flex-direction: column;
   }
 }
+
+.online-postpaid-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #edf1f5 0%, #d8d8d8 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 28px 20px;
+}
+
+.online-postpaid-page__controls {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+}
+
+.online-postpaid-page__controlRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.online-postpaid-page__toggle {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 320px;
+  padding: 4px;
+  border: 1px solid #cfd4dd;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 10px 24px rgba(31, 42, 58, 0.08);
+}
+
+.online-postpaid-page__toggleButton {
+  height: 38px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #5b6880;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.online-postpaid-page__toggleButton.is-active {
+  background: #1f2a3a;
+  color: #ffffff;
+}
+
+.online-postpaid-page__caption {
+  font-size: 13px;
+  font-weight: 700;
+  color: #607089;
+}
+
+.online-postpaid-page__capture {
+  height: 46px;
+  min-width: 110px;
+  padding: 0 16px;
+  border: 1px solid #cfd4dd;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #334154;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.online-postpaid-page__capture.is-success {
+  border-color: #22a447;
+  color: #146d2d;
+  background: #f3fff7;
+}
+
+.online-postpaid-page__capture.is-error {
+  border-color: #d34646;
+  color: #b12727;
+  background: #fff6f6;
+}
+
+.online-postpaid {
+  position: relative;
+  width: var(--device-width, 390px);
+  height: var(--device-height, 844px);
+  max-width: 100vw;
+  max-height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(180deg, #dadada 0%, #d3d3d3 100%);
+  display: grid;
+  grid-template-rows: 20px 206px 74px minmax(0, 1fr) 110px;
+}
+
+.online-postpaid__topMark {
+  width: 82px;
+  height: 7px;
+  margin: 0 auto;
+  border-radius: 0 0 8px 8px;
+  background: #d91057;
+}
+
+.online-postpaid__hero,
+.online-postpaid__qrBackdrop {
+  background-image: var(--ticket-scene-image);
+  background-position: center;
+  background-size: cover;
+}
+
+.online-postpaid__hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.online-postpaid__heroOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.online-postpaid__heroTitle {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  margin: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  padding: 0 34px;
+  color: #fff;
+  font-size: 25px;
+  line-height: 1.12;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  text-align: center;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+}
+
+.online-postpaid__heroTitle span {
+  display: block;
+}
+
+.online-postpaid__qrStrip {
+  position: relative;
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: center;
+  gap: 0;
+  margin-top: -8px;
+  padding: 0 0 0 32px;
+}
+
+.online-postpaid__qrBackdrop {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  opacity: 0.62;
+  filter: grayscale(1);
+}
+
+.online-postpaid__qrBox,
+.online-postpaid__qrLabel {
+  position: relative;
+  z-index: 1;
+}
+
+.online-postpaid__qrBox {
+  width: 86px;
+  height: 86px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+.online-postpaid__qrSvg {
+  width: 78px;
+  height: 78px;
+  display: block;
+}
+
+.online-postpaid__qrLabel {
+  padding-left: 14px;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 18px;
+  font-weight: 500;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.25);
+}
+
+.online-postpaid__content {
+  position: relative;
+  min-height: 0;
+  padding: 0 0 14px;
+  display: grid;
+  grid-template-rows: auto auto;
+  align-content: start;
+  background: linear-gradient(180deg, #dedede 0%, #d6d6d6 100%);
+}
+
+.online-postpaid__ticketCard {
+  position: relative;
+  margin-top: -8px;
+  padding: 34px 22px 14px;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 12px 26px rgba(70, 70, 70, 0.1);
+}
+
+.online-postpaid__watermark {
+  position: absolute;
+  inset: 46px 0 auto 0;
+  text-align: center;
+  font-size: 154px;
+  font-weight: 700;
+  line-height: 1;
+  color: rgba(244, 164, 182, 0.42);
+  pointer-events: none;
+}
+
+.online-postpaid__infoRows {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 0;
+}
+
+.online-postpaid__infoRow,
+.online-postpaid__summaryRow {
+  display: grid;
+  grid-template-columns: 116px minmax(0, 1fr);
+  align-items: center;
+  min-height: 43px;
+  border-bottom: 1px solid #e7e7e7;
+}
+
+.online-postpaid__infoRow:last-child,
+.online-postpaid__summaryRow:last-child {
+  border-bottom: 0;
+}
+
+.online-postpaid__infoLabel,
+.online-postpaid__summaryLabel {
+  position: relative;
+  padding-left: 12px;
+  color: #6d6d6d;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.online-postpaid__infoLabel::before,
+.online-postpaid__summaryLabel::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 14px;
+  background: #ff0a54;
+  transform: translateY(-50%);
+}
+
+.online-postpaid__infoValue,
+.online-postpaid__summaryValue {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  min-width: 0;
+  color: #5d5d5d;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: right;
+  word-break: keep-all;
+}
+
+.online-postpaid__infoValue em {
+  color: #4054ff;
+  font-style: normal;
+}
+
+.online-postpaid__pagination {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding-top: 28px;
+  color: #848484;
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.online-postpaid__pagination strong {
+  color: #111;
+  font-weight: 800;
+}
+
+.online-postpaid__summaryCard {
+  margin-top: 12px;
+  padding: 16px 22px 0;
+  background: transparent;
+}
+
+.online-postpaid__summaryValue {
+  color: #777;
+  font-size: 14px;
+}
+
+.online-postpaid__arrow {
+  position: absolute;
+  top: 126px;
+  z-index: 3;
+  width: 34px;
+  height: 64px;
+  border: 0;
+  background: #f2f2f2;
+  color: #2d2d2d;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  box-shadow: 0 4px 12px rgba(70, 70, 70, 0.14);
+  cursor: pointer;
+}
+
+.online-postpaid__arrow--left {
+  left: 0;
+  border-radius: 0 12px 12px 0;
+}
+
+.online-postpaid__arrow--right {
+  right: 0;
+  border-radius: 12px 0 0 12px;
+  background: #df124f;
+  color: #fff;
+}
+
+.online-postpaid__footerBanner {
+  background: #fff;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 6px;
+  padding-bottom: 8px;
+}
+
+.online-postpaid__smartixLogo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #f8383f;
+}
+
+.online-postpaid__smartixLogo strong {
+  font-size: 27px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.online-postpaid__smartixLogoMark {
+  position: relative;
+  width: 18px;
+  height: 22px;
+  border-radius: 7px 7px 7px 2px;
+  background: #f8383f;
+}
+
+.online-postpaid__smartixLogoMark::before,
+.online-postpaid__smartixLogoMark::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.online-postpaid__smartixLogoMark::before {
+  top: 7px;
+}
+
+.online-postpaid__smartixLogoMark::after {
+  top: 12px;
+}
+
+.online-postpaid__footerBanner p {
+  margin: 0;
+  color: #202020;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.online-postpaid--android {
+  grid-template-rows: 18px 190px 70px minmax(0, 1fr) 102px;
+}
+
+.online-postpaid--android .online-postpaid__heroTitle {
+  font-size: 23px;
+}
+
+.online-postpaid--android .online-postpaid__arrow {
+  top: 114px;
+}
+
+.online-postpaid--tablet {
+  grid-template-rows: 24px 248px 88px minmax(0, 1fr) 132px;
+}
+
+.online-postpaid--tablet .online-postpaid__topMark {
+  width: 96px;
+  height: 9px;
+}
+
+.online-postpaid--tablet .online-postpaid__heroTitle {
+  font-size: 38px;
+  padding: 0 72px;
+}
+
+.online-postpaid--tablet .online-postpaid__qrStrip {
+  grid-template-columns: 138px minmax(0, 1fr);
+  padding-left: 56px;
+}
+
+.online-postpaid--tablet .online-postpaid__qrBox {
+  width: 126px;
+  height: 126px;
+}
+
+.online-postpaid--tablet .online-postpaid__qrSvg {
+  width: 112px;
+  height: 112px;
+}
+
+.online-postpaid--tablet .online-postpaid__qrLabel {
+  font-size: 28px;
+  padding-left: 24px;
+}
+
+.online-postpaid--tablet .online-postpaid__ticketCard {
+  border-radius: 22px;
+  padding: 52px 34px 24px;
+}
+
+.online-postpaid--tablet .online-postpaid__watermark {
+  font-size: 240px;
+  inset: 74px 0 auto 0;
+}
+
+.online-postpaid--tablet .online-postpaid__infoRow,
+.online-postpaid--tablet .online-postpaid__summaryRow {
+  grid-template-columns: 180px minmax(0, 1fr);
+  min-height: 58px;
+}
+
+.online-postpaid--tablet .online-postpaid__infoLabel,
+.online-postpaid--tablet .online-postpaid__summaryLabel,
+.online-postpaid--tablet .online-postpaid__infoValue {
+  font-size: 22px;
+}
+
+.online-postpaid--tablet .online-postpaid__summaryValue {
+  font-size: 20px;
+}
+
+.online-postpaid--tablet .online-postpaid__pagination {
+  padding-top: 34px;
+  font-size: 22px;
+}
+
+.online-postpaid--tablet .online-postpaid__arrow {
+  top: 164px;
+  width: 44px;
+  height: 82px;
+}
+
+.online-postpaid--tablet .online-postpaid__smartixLogo strong {
+  font-size: 38px;
+}
+
+.online-postpaid--tablet .online-postpaid__footerBanner p {
+  font-size: 18px;
+}
+
+@media (max-width: 640px) {
+  .online-postpaid {
+    width: 100%;
+    height: calc(100vh - 40px);
+    max-width: 100%;
+    max-height: none;
+  }
+
+  .online-postpaid-page {
+    padding: 20px 12px;
+  }
+
+  .online-postpaid-page__toggle {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .online-postpaid-page__controlRow {
+    width: 100%;
+    max-width: 430px;
+    flex-direction: column;
+  }
+}
+
+.pos-mode-toggle--footer {
+  width: 376px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.pos-mode-toggle__button {
+  white-space: nowrap;
+}
+
+.keyband-table__head,
+.keyband-row {
+  grid-template-columns: 56px 82px minmax(0, 1fr) 92px;
+}
+
+.keyband-table__selectLabel {
+  display: inline-flex;
+  justify-content: center;
+}
+
+.keyband-row__select {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.keyband-row__select input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+}

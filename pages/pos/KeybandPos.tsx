@@ -251,6 +251,25 @@ export function KeybandPos() {
     });
   };
 
+  const handleToggleRowSelection = (rowId: string) => {
+    const row = trackedRows.find((keybandRow) => keybandRow.id === rowId);
+
+    if (!row) {
+      return;
+    }
+
+    const rowItemIds = row.items.map((item) => item.id);
+    const isSelected = rowItemIds.every((itemId) => keybandCartItemIds.includes(itemId));
+
+    setKeybandCartItemIds((current) => {
+      if (isSelected) {
+        return current.filter((itemId) => !rowItemIds.includes(itemId));
+      }
+
+      return [...current, ...rowItemIds.filter((itemId) => !current.includes(itemId))];
+    });
+  };
+
   const handleRemoveFromCart = (itemId: string) => {
     setKeybandCartItemIds((current) => current.filter((currentItemId) => currentItemId !== itemId));
   };
@@ -406,7 +425,7 @@ export function KeybandPos() {
 
             <div className="keyband-table" role="table" aria-label="키밴드 조회 내역">
               <div className="keyband-table__head" role="row">
-                <span>예약번호</span>
+                <span className="keyband-table__selectLabel">선택</span>
                 <span>키밴드</span>
                 <div className="keyband-table__itemHead">
                   <span>상품</span>
@@ -423,7 +442,13 @@ export function KeybandPos() {
                 {groupedRows.map((row) => {
                   return (
                     <div key={row.id} className="keyband-row" role="row">
-                      <span>{row.reservationNo}</span>
+                      <label className="keyband-row__select" aria-label={`${row.bandNo} 선택`}>
+                        <input
+                          type="checkbox"
+                          checked={row.inCart}
+                          onChange={() => handleToggleRowSelection(row.id)}
+                        />
+                      </label>
                       <span>{row.bandNo}</span>
                       <div className="keyband-row__items">
                         {row.items.map((item) => (

@@ -5,33 +5,47 @@ import { KeybandUsage } from "./pages/pos/KeybandUsage";
 import { KeybandPos } from "./pages/pos/KeybandPos";
 import { MobileSettlementPage } from "./pages/pos/MobileSettlement";
 import { NormalPos } from "./pages/pos/NormalPos";
-import { posModes, topTabs } from "./pages/pos/posData";
+import { OnlinePostpaidPage } from "./pages/pos/OnlinePostpaid";
+import { topTabs } from "./pages/pos/posData";
 import { copyElementPng } from "./utils/copyPng";
 
 type CopyState = "idle" | "success" | "error";
-type AppScreen = "pos" | "mobile-settlement";
+type AppScreen = "pos" | "mobile-settlement" | "online-postpaid";
+type FooterModeId = "general" | "keyband" | "mobile-settlement" | "online-postpaid";
 
-function getAppScreenFromHash(): AppScreen {
-  return window.location.hash === "#/mobile-settlement" ? "mobile-settlement" : "pos";
+function getHashRoute() {
+  const rawHash = window.location.hash.replace(/^#/, "") || "/";
+  const [path] = rawHash.split("?");
+
+  if (path === "/mobile-settlement") {
+    return "mobile-settlement" as const;
+  }
+
+  if (path === "/online-postpaid") {
+    return "online-postpaid" as const;
+  }
+
+  return "pos" as const;
 }
 
 const footerModes = [
   { id: "general", label: "일반 포스" },
   { id: "keyband", label: "키밴드 정산" },
   { id: "mobile-settlement", label: "모바일 정산" },
-] as const;
+  { id: "online-postpaid", label: "온라인 후불" },
+] as const satisfies ReadonlyArray<{ id: FooterModeId; label: string }>;
 
 export default function App() {
   const [selectedTab, setSelectedTab] = useState<(typeof topTabs)[number]>(topTabs[0]);
-  const [posMode, setPosMode] = useState<(typeof posModes)[number]["id"]>("general");
+  const [posMode, setPosMode] = useState<FooterModeId>("general");
   const [copyState, setCopyState] = useState<CopyState>("idle");
-  const [screen, setScreen] = useState<AppScreen>(() => getAppScreenFromHash());
+  const [screen, setScreen] = useState<AppScreen>(() => getHashRoute());
   const [isKeybandUsageModalOpen, setIsKeybandUsageModalOpen] = useState(false);
   const isKeybandMode = posMode === "keyband";
 
   useEffect(() => {
     const handleHashChange = () => {
-      setScreen(getAppScreenFromHash());
+      setScreen(getHashRoute());
     };
 
     window.addEventListener("hashchange", handleHashChange);
@@ -67,6 +81,10 @@ export default function App() {
 
   if (screen === "mobile-settlement") {
     return <MobileSettlementPage />;
+  }
+
+  if (screen === "online-postpaid") {
+    return <OnlinePostpaidPage />;
   }
 
   return (
@@ -130,7 +148,14 @@ export default function App() {
                 aria-selected={mode.id === posMode}
                 onClick={() => {
                   if (mode.id === "mobile-settlement") {
+                    setPosMode(mode.id);
                     window.location.hash = "/mobile-settlement";
+                    return;
+                  }
+
+                  if (mode.id === "online-postpaid") {
+                    setPosMode(mode.id);
+                    window.location.hash = "/online-postpaid";
                     return;
                   }
 

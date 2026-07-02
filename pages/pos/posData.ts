@@ -3,6 +3,7 @@ export const topTabs = ["현장 판매", "예약 조회", "환불", "창구 마�
 export const posModes = [
   { id: "general", label: "일반 포스" },
   { id: "keyband", label: "키밴드 정산" },
+  { id: "online-postpaid", label: "온라인 후불" },
 ] as const;
 
 export const productCategories = [
