@@ -1,4 +1,4 @@
-export const topTabs = ["현장 판매", "예약 조회", "환불", "창구 마감"] as const;
+﻿export const topTabs = ["현장 판매", "예약 조회", "환불", "창구 마감"] as const;
 
 export const posModes = [
   { id: "general", label: "일반 포스" },
@@ -336,4 +336,11 @@ export const keybandUsageRows = [
   },
 ] as const;
 
-export const availableKeybands = ["KB-2001", "KB-2002", "KB-2003", "KB-2004"] as const;
+const generatedAvailableKeybands = Array.from({ length: 99 }, (_, index) => {
+  const keybandNumber = String(1001 + index).padStart(4, "0");
+
+  return `KB-${keybandNumber}`;
+});
+
+export const availableKeybands = [...generatedAvailableKeybands, "KB-2001", "KB-2002", "KB-2003", "KB-2004"] as const;
+

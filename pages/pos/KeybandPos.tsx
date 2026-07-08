@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Search, ShoppingCart, X } from "lucide-react";
+﻿import { ChevronLeft, ChevronRight, Search, ShoppingCart, X } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
 
 import { CheckoutPanel, type CheckoutItem } from "../../components/pos/CheckoutPanel";
@@ -51,6 +51,7 @@ type KeybandRow = {
   reservationNo: string;
   phone: string;
   name: string;
+  sourceType?: PendingKeybandTicket["sourceType"];
   time: string;
   amount: string;
   status: string;
@@ -61,6 +62,13 @@ type PendingKeybandTicket = (typeof unmatchedKeybandTickets)[number];
 type IssueBandField = {
   id: string;
   value: string;
+};
+
+type ExchangeHistoryItem = {
+  id: string;
+  fromBandNo: string;
+  toBandNo: string;
+  changedAt: string;
 };
 
 function matchesIssuedRow(row: KeybandRow, query: string, queryDigits: string) {
@@ -121,6 +129,7 @@ function createIssuedRows(ticket: PendingKeybandTicket, bandNos: string[]): Keyb
       reservationNo: ticket.reservationNo,
       phone: ticket.phone,
       name: ticket.name,
+      sourceType: ticket.sourceType,
       time: ticket.time,
       amount: assignedItem?.price ?? "0원",
       status: "발급 완료",
@@ -146,7 +155,11 @@ function getIssueCustomerName(ticket: PendingKeybandTicket) {
 }
 
 function getIssueContact(ticket: PendingKeybandTicket) {
-  return ticket.sourceType === "현장 발권" ? "" : ticket.phone;
+  return ticket.sourceType === "\uD604\uC7A5 \uBC1C\uAD8C" ? "" : ticket.phone;
+}
+
+function getRowCustomerName(row: KeybandRow) {
+  return row.sourceType === "\uD604\uC7A5 \uBC1C\uAD8C" ? "\uD604\uC7A5 \uBC29\uBB38 \uACE0\uAC1D" : row.name;
 }
 
 export function KeybandPos() {
@@ -158,11 +171,21 @@ export function KeybandPos() {
   const [issueTargetId, setIssueTargetId] = useState<string | null>(null);
   const [issueBandFields, setIssueBandFields] = useState<IssueBandField[]>([]);
   const [issueError, setIssueError] = useState("");
+  const [rowOverrides, setRowOverrides] = useState<Record<string, Partial<KeybandRow>>>({});
+  const [exchangeTargetId, setExchangeTargetId] = useState<string | null>(null);
+  const [exchangeBandValue, setExchangeBandValue] = useState("");
+  const [exchangeError, setExchangeError] = useState("");
+  const [exchangeHistoryByRowId, setExchangeHistoryByRowId] = useState<Record<string, ExchangeHistoryItem[]>>({});
 
   const query = keybandQuery.trim().toLowerCase();
   const queryDigits = normalizeDigits(keybandQuery);
 
-  const trackedRows = useMemo<KeybandRow[]>(() => [...issuedRows, ...keybandRows], [issuedRows]);
+  const trackedRows = useMemo<KeybandRow[]>(() => {
+    return [...issuedRows, ...keybandRows].map((row) => ({
+      ...row,
+      ...(rowOverrides[row.id] ?? {}),
+    }));
+  }, [issuedRows, rowOverrides]);
 
   const pendingTickets = useMemo(
     () => unmatchedKeybandTickets.filter((ticket) => !issuedPendingTicketIds.includes(ticket.id)),
@@ -190,6 +213,15 @@ export function KeybandPos() {
     () => pendingTickets.find((ticket) => ticket.id === issueTargetId) ?? null,
     [issueTargetId, pendingTickets],
   );
+
+  const currentExchangeTarget = useMemo(
+    () => trackedRows.find((row) => row.id === exchangeTargetId) ?? null,
+    [exchangeTargetId, trackedRows],
+  );
+
+  const currentExchangeHistory = currentExchangeTarget
+    ? exchangeHistoryByRowId[currentExchangeTarget.id] ?? []
+    : [];
 
   const cartItems = useMemo<CheckoutItem[]>(() => {
     return keybandCartItemIds.reduce<CheckoutItem[]>((items, id) => {
@@ -235,6 +267,24 @@ export function KeybandPos() {
     setIssueTargetId(null);
     setIssueBandFields([]);
     setIssueError("");
+  };
+
+  const openExchangeModal = (rowId: string) => {
+    const row = trackedRows.find((keybandRow) => keybandRow.id === rowId);
+
+    if (!row) {
+      return;
+    }
+
+    setExchangeTargetId(rowId);
+    setExchangeBandValue("");
+    setExchangeError("");
+  };
+
+  const closeExchangeModal = () => {
+    setExchangeTargetId(null);
+    setExchangeBandValue("");
+    setExchangeError("");
   };
 
   const handleAddToCart = (rowId: string) => {
@@ -313,11 +363,9 @@ export function KeybandPos() {
     setKeybandQuery("");
     setSearchedRowIds([]);
     closeIssueModal();
+    closeExchangeModal();
   };
 
-  const handleRemoveFromHistory = (rowId: string) => {
-    setSearchedRowIds((current) => current.filter((currentRowId) => currentRowId !== rowId));
-  };
 
   const handleIssueSubmit = () => {
     if (!currentIssueTarget) {
@@ -373,6 +421,84 @@ export function KeybandPos() {
       ...current.filter((rowId) => !nextIssuedRows.some((row) => row.id === rowId)),
     ]);
     closeIssueModal();
+  };
+
+  const handleExchangeSubmit = () => {
+    if (!currentExchangeTarget) {
+      return;
+    }
+
+    const normalizedBandNo = normalizeScanValue(exchangeBandValue);
+
+    if (!normalizedBandNo) {
+      setExchangeError("\uad50\ud658\ud560 \ud0a4\ubc34\ub4dc\ub97c \uc785\ub825\ud574 \uc8fc\uc138\uc694.");
+      return;
+    }
+
+    if (!isValidKeybandFormat(normalizedBandNo)) {
+      setExchangeError("\ub4f1\ub85d\ub41c \ubcf4\uc720 \ud0a4\ubc34\ub4dc\uac00 \uc544\ub2d9\ub2c8\ub2e4.");
+      return;
+    }
+
+    if (normalizeScanValue(currentExchangeTarget.bandNo) === normalizedBandNo) {
+      setExchangeError("\ud604\uc7ac \uc0ac\uc6a9 \uc911\uc778 \ud0a4\ubc34\ub4dc\uc640 \uac19\uc740 \ubc88\ud638\ub294 \uad50\ud658\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4.");
+      return;
+    }
+
+    const missingBandNo = !availableKeybands.some(
+      (availableBandNo) => normalizeScanValue(availableBandNo) === normalizedBandNo,
+    );
+
+    if (missingBandNo) {
+      setExchangeError("\ub4f1\ub85d\ub41c \ubcf4\uc720 \ud0a4\ubc34\ub4dc\uac00 \uc544\ub2d9\ub2c8\ub2e4.");
+      return;
+    }
+
+    const alreadyIssuedBandNo = trackedRows.some(
+      (row) =>
+        row.id !== currentExchangeTarget.id &&
+        normalizeScanValue(row.bandNo) === normalizedBandNo &&
+        !isReturnedKeyband(row),
+    );
+
+    if (alreadyIssuedBandNo) {
+      setExchangeError("\uc774\ubbf8 \uc0ac\uc6a9 \uc911\uc778 \ud0a4\ubc34\ub4dc\uc785\ub2c8\ub2e4.");
+      return;
+    }
+
+    const previousBandNo = currentExchangeTarget.bandNo;
+    const changedAt = new Intl.DateTimeFormat("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(new Date());
+
+    setRowOverrides((current) => ({
+      ...current,
+      [currentExchangeTarget.id]: {
+        ...(current[currentExchangeTarget.id] ?? {}),
+        bandNo: normalizedBandNo,
+      },
+    }));
+
+    setExchangeHistoryByRowId((current) => ({
+      ...current,
+      [currentExchangeTarget.id]: [
+        {
+          id: currentExchangeTarget.id + "-" + Date.now(),
+          fromBandNo: previousBandNo,
+          toBandNo: normalizedBandNo,
+          changedAt,
+        },
+        ...(current[currentExchangeTarget.id] ?? []),
+      ],
+    }));
+
+    setKeybandQuery(normalizedBandNo);
+    closeExchangeModal();
   };
 
   return (
@@ -449,7 +575,16 @@ export function KeybandPos() {
                           onChange={() => handleToggleRowSelection(row.id)}
                         />
                       </label>
-                      <span>{row.bandNo}</span>
+                      <div className="keyband-row__band">
+                        <span>{row.bandNo}</span>
+                        <button
+                          type="button"
+                          className="keyband-row__exchange"
+                          onClick={() => openExchangeModal(row.id)}
+                        >
+                          {"\uad50\ud658"}
+                        </button>
+                      </div>
                       <div className="keyband-row__items">
                         {row.items.map((item) => (
                           <div key={item.id} className="keyband-row__item">
@@ -472,15 +607,6 @@ export function KeybandPos() {
                           title={row.inCart ? "장바구니에 담김" : "장바구니에 담기"}
                         >
                           <ShoppingCart size={16} />
-                        </button>
-                        <button
-                          type="button"
-                          className="keyband-row__remove"
-                          onClick={() => handleRemoveFromHistory(row.id)}
-                          aria-label="조회 내역에서 제거"
-                          title="조회 내역에서 제거"
-                        >
-                          <X size={14} />
                         </button>
                       </div>
                     </div>
@@ -609,6 +735,78 @@ export function KeybandPos() {
           </section>
         </div>
       ) : null}
+
+      {currentExchangeTarget ? (
+        <div className="keyband-exchange" role="dialog" aria-modal="true" aria-labelledby="keyband-exchange-title">
+          <div className="keyband-exchange__backdrop" onClick={closeExchangeModal} />
+          <section className="keyband-exchange__panel">
+            <div className="keyband-exchange__header">
+              <div>
+                <strong id="keyband-exchange-title">{"\ud0a4\ubc34\ub4dc \uad50\ud658"}</strong>
+                <span>{"\uc120\ud0dd\ud55c \ud0a4\ubc34\ub4dc \uc815\ubcf4\ub97c \ud655\uc778\ud55c \ud6c4 \uc0c8 \ud0a4\ubc34\ub4dc\ub97c \uc785\ub825\ud574 \uc8fc\uc138\uc694."}</span>
+              </div>
+              <button type="button" className="keyband-exchange__close" onClick={closeExchangeModal} aria-label={"\ud31d\uc5c5 \ub2eb\uae30"}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="keyband-exchange__field">
+              <span>{"\ud604\uc7ac \ud0a4\ubc34\ub4dc"}</span>
+              <input type="text" value={currentExchangeTarget.bandNo} readOnly />
+            </div>
+
+            <div className="keyband-exchange__field">
+              <span>{"\uad50\ud658\ud560 \ud0a4\ubc34\ub4dc \uc785\ub825"}</span>
+              <input
+                type="text"
+                value={exchangeBandValue}
+                placeholder="ex. KB-2001"
+                onChange={(event) => {
+                  setExchangeBandValue(event.target.value);
+
+                  if (exchangeError) {
+                    setExchangeError("");
+                  }
+                }}
+              />
+            </div>
+
+            <div className="keyband-exchange__history">
+              <div className="keyband-exchange__historyHead">
+                <span>{"\uae30\uc874 \ud0a4\ubc34\ub4dc"}</span>
+                <span>{"\uad50\ud658 \ud0a4\ubc34\ub4dc"}</span>
+                <span>{"\ucc98\ub9ac \uc77c\uc2dc"}</span>
+              </div>
+              <div className="keyband-exchange__historyBody">
+                {currentExchangeHistory.length > 0 ? (
+                  currentExchangeHistory.map((history) => (
+                    <div key={history.id} className="keyband-exchange__historyRow">
+                      <span>{history.fromBandNo}</span>
+                      <span>{history.toBandNo}</span>
+                      <span>{history.changedAt}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="keyband-exchange__historyEmpty">{"\uad50\ud658 \uc774\ub825\uc774 \uc5c6\uc2b5\ub2c8\ub2e4."}</div>
+                )}
+              </div>
+            </div>
+
+            {exchangeError ? <div className="keyband-exchange__error">{exchangeError}</div> : null}
+
+            <div className="keyband-exchange__actions">
+              <button type="button" className="keyband-exchange__secondary" onClick={closeExchangeModal}>
+                {"\ucde8\uc18c"}
+              </button>
+              <button type="button" className="keyband-exchange__primary" onClick={handleExchangeSubmit}>
+                {"\uad50\ud658"}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </>
   );
 }
+
+
