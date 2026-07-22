@@ -1,4 +1,4 @@
-﻿export const topTabs = ["현장 판매", "예약 조회", "환불", "창구 마감"] as const;
+export const topTabs = ["현장 판매", "예약 조회", "환불", "창구 마감"] as const;
 
 export const posModes = [
   { id: "general", label: "일반 포스" },
@@ -15,6 +15,10 @@ export const productCategories = [
   { id: "tube", label: "튜브" },
   { id: "cabana", label: "미오코스타 카바나" },
   { id: "bed", label: "선베드" },
+  { id: "package-same-date", label: "동일 일자 패키지" },
+  { id: "package-per-product-date", label: "상품별 일자 패키지" },
+  { id: "package-lesson-suit-board", label: "레슨 1단계 + 슈트 + 보드 패키지" },
+  { id: "package-miocosta-lifejacket", label: "미오코스타 + 구명조끼 패키지" },
 ] as const;
 
 export const schedules = [
@@ -29,6 +33,264 @@ export const schedules = [
     ],
   },
 ] as const;
+export const packageScheduleConfigs = {
+  "package-same-date": {
+    mode: "same-date",
+    items: [
+      {
+        id: "package-item-1",
+        kind: "schedule",
+        productName: "동해물과 백두산이 마르고 닳도록",
+        options: [
+          {
+            id: "package-item-1-0900",
+            title: "09:00 ~ 10:00",
+            rows: [["정원", "30"], ["발권", "12"], ["잔여", "18"], ["온라인 잔여", "5"]],
+          },
+          {
+            id: "package-item-1-1100",
+            title: "11:00 ~ 12:00",
+            rows: [["정원", "30"], ["발권", "20"], ["잔여", "10"], ["온라인 잔여", "3"]],
+          },
+        ],
+      },
+      {
+        id: "package-item-2",
+        kind: "schedule",
+        productName: "구성상품 2",
+        options: [
+          {
+            id: "package-item-2-1000",
+            title: "10:00 ~ 11:00",
+            rows: [["정원", "24"], ["발권", "8"], ["잔여", "16"], ["온라인 잔여", "4"]],
+          },
+          {
+            id: "package-item-2-1400",
+            title: "14:00 ~ 15:00",
+            rows: [["정원", "24"], ["발권", "19"], ["잔여", "5"], ["온라인 잔여", "1"]],
+          },
+        ],
+      },
+      {
+        id: "package-item-3",
+        kind: "schedule",
+        productName: "구성상품 3",
+        options: [
+          {
+            id: "package-item-3-1200",
+            title: "12:00 ~ 13:00",
+            rows: [["정원", "18"], ["발권", "7"], ["잔여", "11"], ["온라인 잔여", "2"]],
+          },
+          {
+            id: "package-item-3-1600",
+            title: "16:00 ~ 17:00",
+            rows: [["정원", "18"], ["발권", "13"], ["잔여", "5"], ["온라인 잔여", "1"]],
+          },
+        ],
+      },
+      {
+        id: "package-item-4",
+        kind: "schedule",
+        productName: "구성상품 4",
+        options: [
+          {
+            id: "package-item-4-1800",
+            title: "18:00 ~ 19:00",
+            rows: [["정원", "12"], ["발권", "3"], ["잔여", "9"], ["온라인 잔여", "2"]],
+          },
+          {
+            id: "package-item-4-1930",
+            title: "19:30 ~ 20:30",
+            rows: [["정원", "12"], ["발권", "8"], ["잔여", "4"], ["온라인 잔여", "1"]],
+          },
+        ],
+      },
+    ],
+  },
+  "package-per-product-date": {
+    mode: "per-product-date",
+    items: [
+      {
+        id: "package-date-item-1",
+        kind: "schedule",
+        productName: "구성상품 1",
+        options: [
+          {
+            id: "package-date-item-1-0900",
+            title: "09:00 ~ 10:00",
+            rows: [["정원", "20"], ["발권", "9"], ["잔여", "11"], ["온라인 잔여", "2"]],
+          },
+          {
+            id: "package-date-item-1-1300",
+            title: "13:00 ~ 14:00",
+            rows: [["정원", "20"], ["발권", "14"], ["잔여", "6"], ["온라인 잔여", "1"]],
+          },
+        ],
+      },
+      {
+        id: "package-date-item-2",
+        kind: "schedule",
+        productName: "구성상품 2",
+        options: [
+          {
+            id: "package-date-item-2-1000",
+            title: "10:00 ~ 11:00",
+            rows: [["정원", "18"], ["발권", "6"], ["잔여", "12"], ["온라인 잔여", "3"]],
+          },
+          {
+            id: "package-date-item-2-1500",
+            title: "15:00 ~ 16:00",
+            rows: [["정원", "18"], ["발권", "11"], ["잔여", "7"], ["온라인 잔여", "2"]],
+          },
+        ],
+      },
+      {
+        id: "package-date-item-3",
+        kind: "schedule",
+        productName: "구성상품 3",
+        options: [
+          {
+            id: "package-date-item-3-1100",
+            title: "11:00 ~ 12:00",
+            rows: [["정원", "16"], ["발권", "5"], ["잔여", "11"], ["온라인 잔여", "4"]],
+          },
+          {
+            id: "package-date-item-3-1700",
+            title: "17:00 ~ 18:00",
+            rows: [["정원", "16"], ["발권", "10"], ["잔여", "6"], ["온라인 잔여", "1"]],
+          },
+        ],
+      },
+      {
+        id: "package-date-item-4",
+        kind: "schedule",
+        productName: "구성상품 4",
+        options: [
+          {
+            id: "package-date-item-4-1800",
+            title: "18:00 ~ 19:00",
+            rows: [["정원", "14"], ["발권", "4"], ["잔여", "10"], ["온라인 잔여", "3"]],
+          },
+        ],
+      },
+    ],
+  },
+  "package-lesson-suit-board": {
+    mode: "period-schedule",
+    periodLabel: "이용 기간",
+    periodValue: "2026-07-01 ~ 2026-12-31",
+    items: [
+      {
+        id: "lesson-package-item-1",
+        kind: "schedule",
+        productName: "레슨 1단계",
+        options: [
+          {
+            id: "lesson-package-item-1-1000",
+            title: "10:00 ~ 11:00",
+            rows: [["정원", "16"], ["발권", "6"], ["잔여", "10"], ["온라인 잔여", "2"]],
+          },
+          {
+            id: "lesson-package-item-1-1500",
+            title: "15:00 ~ 16:00",
+            rows: [["정원", "16"], ["발권", "9"], ["잔여", "7"], ["온라인 잔여", "1"]],
+          },
+        ],
+      },
+      {
+        id: "lesson-package-item-2",
+        kind: "period",
+        productName: "슈트",
+        options: [
+          {
+            id: "lesson-package-item-2-all-day",
+            title: "기간 상품",
+            rows: [["정원", "-"], ["발권", "11"], ["잔여", "-"], ["온라인 잔여", "-"]],
+          },
+        ],
+      },
+      {
+        id: "lesson-package-item-3",
+        kind: "period",
+        productName: "보드",
+        options: [
+          {
+            id: "lesson-package-item-3-all-day",
+            title: "기간 상품",
+            rows: [["정원", "100"], ["발권", "4"], ["잔여", "96"], ["온라인 잔여", "96"]],
+          },
+        ],
+      },
+      {
+        id: "lesson-package-item-4",
+        kind: "period",
+        productName: "구성상품 4",
+        options: [
+          {
+            id: "lesson-package-item-4-all-day",
+            title: "기간 상품",
+            rows: [["정원", "100"], ["발권", "8"], ["잔여", "92"], ["온라인 잔여", "92"]],
+          },
+        ],
+      },
+    ],
+  },
+  "package-miocosta-lifejacket": {
+    mode: "period-schedule",
+    periodLabel: "이용 기간",
+    periodValue: "2026-07-01 ~ 2026-12-31",
+    items: [
+      {
+        id: "miocosta-package-item-1",
+        kind: "period",
+        productName: "미오코스타",
+        options: [
+          {
+            id: "miocosta-package-item-1-all-day",
+            title: "기간 상품",
+            rows: [["정원", "80"], ["발권", "26"], ["잔여", "54"], ["온라인 잔여", "54"]],
+          },
+        ],
+      },
+      {
+        id: "miocosta-package-item-2",
+        kind: "period",
+        productName: "구명조끼",
+        options: [
+          {
+            id: "miocosta-package-item-2-all-day",
+            title: "기간 상품",
+            rows: [["정원", "-"], ["발권", "18"], ["잔여", "-"], ["온라인 잔여", "-"]],
+          },
+        ],
+      },
+      {
+        id: "miocosta-package-item-3",
+        kind: "period",
+        productName: "구성상품 3",
+        options: [
+          {
+            id: "miocosta-package-item-3-all-day",
+            title: "기간 상품",
+            rows: [["정원", "40"], ["발권", "12"], ["잔여", "28"], ["온라인 잔여", "28"]],
+          },
+        ],
+      },
+      {
+        id: "miocosta-package-item-4",
+        kind: "period",
+        productName: "구성상품 4",
+        options: [
+          {
+            id: "miocosta-package-item-4-all-day",
+            title: "기간 상품",
+            rows: [["정원", "40"], ["발권", "21"], ["잔여", "19"], ["온라인 잔여", "19"]],
+          },
+        ],
+      },
+    ],
+  },
+} as const;
 
 export const ticketOptions = [
   { title: "소프트 보드 (1시간)", price: "9,000원" },
@@ -343,4 +605,3 @@ const generatedAvailableKeybands = Array.from({ length: 99 }, (_, index) => {
 });
 
 export const availableKeybands = [...generatedAvailableKeybands, "KB-2001", "KB-2002", "KB-2003", "KB-2004"] as const;
-
