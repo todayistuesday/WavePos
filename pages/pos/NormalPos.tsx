@@ -2,9 +2,37 @@ import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { CheckoutPanel, type CheckoutItem } from "../../components/pos/CheckoutPanel";
-import { generalPaymentMethods, productCategories, schedules, ticketOptions, topTabs } from "./posData";
+import {
+  generalPaymentMethods,
+  packageScheduleConfigs,
+  productCategories,
+  schedules,
+  ticketOptions,
+  topTabs,
+} from "./posData";
 
 type NormalPosTab = (typeof topTabs)[number];
+type PackageScheduleConfig = (typeof packageScheduleConfigs)[keyof typeof packageScheduleConfigs];
+type PackageScheduleItem = PackageScheduleConfig["items"][number];
+
+const sameDatePackageTicketOptions = [
+  { title: "슈트패키지", price: "9,000원" },
+  { title: "보드패키지", price: "18,000원" },
+  { title: "선베드 패키지", price: "19,000원" },
+  { title: "카바나 패키지", price: "24,000원" },
+] as const;
+
+const lessonSuitBoardPackageTicketOptions = [
+  { title: "성인 패키지", price: "24,000원" },
+  { title: "어린이 패키지", price: "18,000원" },
+] as const;
+
+const miocostaLifejacketPackageTicketOptions = [
+  { title: "성인 입장 패키지", price: "18,000" },
+  { title: "소인 입장 패키지", price: "13,000" },
+  { title: "주말 성인 입장 패키지", price: "21,000" },
+  { title: "주말 소인 입장 패키지", price: "18,000" },
+] as const;
 
 interface RefundSummaryRow {
   date: string;
@@ -74,8 +102,22 @@ const refundDetailRows: RefundDetailRow[] = [
   },
 ];
 
+const hiddenProductCategoryIds = new Set(["snorkel", "tube", "cabana", "bed"]);
+
 function normalizeKeybandTag(value: string) {
   return value.trim().toUpperCase();
+}
+
+function getPackageColumnCount(itemCount: number) {
+  if (itemCount <= 1) {
+    return 1;
+  }
+
+  if (itemCount === 2) {
+    return 2;
+  }
+
+  return itemCount % 2 === 0 ? 2 : 3;
 }
 
 function GeneralSalesBody() {
@@ -86,7 +128,82 @@ function GeneralSalesBody() {
   const [taggingError, setTaggingError] = useState("");
   const [isTaggingModalOpen, setIsTaggingModalOpen] = useState(false);
   const [lastTaggedBandNo, setLastTaggedBandNo] = useState("");
+  const [packagePresetCount, setPackagePresetCount] = useState<2 | 3 | 4>(3);
   const taggingInputRef = useRef<HTMLInputElement>(null);
+
+  const visibleProductCategories = useMemo(
+    () => productCategories.filter((item) => !hiddenProductCategoryIds.has(item.id)),
+    [],
+  );
+
+  const packageScheduleEntries = useMemo(
+    () => Object.entries(packageScheduleConfigs) as Array<[string, PackageScheduleConfig]>,
+    [],
+  );
+
+  const [packageScheduleSelections, setPackageScheduleSelections] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      packageScheduleEntries.flatMap(([, config]) =>
+        config.items.map((item) => [item.id, item.options[0]?.id ?? ""] as const),
+      ),
+    ),
+  );
+
+  const selectedPackageScheduleConfig = useMemo(() => {
+    const matchedEntry = packageScheduleEntries.find(([categoryId]) => categoryId === selectedCategory);
+    return matchedEntry?.[1] ?? null;
+  }, [packageScheduleEntries, selectedCategory]);
+
+  const visiblePackageScheduleItems = useMemo(() => {
+    if (!selectedPackageScheduleConfig) {
+      return [] as PackageScheduleItem[];
+    }
+
+    return selectedPackageScheduleConfig.items.slice(
+      0,
+      Math.min(packagePresetCount, selectedPackageScheduleConfig.items.length),
+    );
+  }, [packagePresetCount, selectedPackageScheduleConfig]);
+
+  const packageColumnCount = useMemo(
+    () => getPackageColumnCount(visiblePackageScheduleItems.length),
+    [visiblePackageScheduleItems.length],
+  );
+
+  const selectedPackageScheduleSummary = useMemo(() => {
+    if (!selectedPackageScheduleConfig) {
+      return null;
+    }
+
+    return visiblePackageScheduleItems
+      .map((item) => {
+        const selectedOptionId = packageScheduleSelections[item.id] ?? item.options[0]?.id ?? "";
+        const selectedOption = item.options.find((option) => option.id === selectedOptionId) ?? item.options[0];
+
+        if (!selectedOption) {
+          return item.productName;
+        }
+
+        return `${item.productName} ${selectedOption.title}`;
+      })
+      .join(" / ");
+  }, [packageScheduleSelections, selectedPackageScheduleConfig, visiblePackageScheduleItems]);
+
+  const visibleTicketOptions = useMemo(() => {
+    if (selectedCategory === "package-same-date") {
+      return sameDatePackageTicketOptions;
+    }
+
+    if (selectedCategory === "package-lesson-suit-board") {
+      return lessonSuitBoardPackageTicketOptions;
+    }
+
+    if (selectedCategory === "package-miocosta-lifejacket") {
+      return miocostaLifejacketPackageTicketOptions;
+    }
+
+    return ticketOptions;
+  }, [selectedCategory]);
 
   const checkoutTotal = useMemo(
     () =>
@@ -96,6 +213,7 @@ function GeneralSalesBody() {
       ),
     [checkoutItems],
   );
+
   const checkoutQuantity = useMemo(
     () => checkoutItems.reduce((sum, item) => sum + item.quantity, 0),
     [checkoutItems],
@@ -109,15 +227,13 @@ function GeneralSalesBody() {
     taggingInputRef.current?.focus();
   }, [isTaggingModalOpen]);
 
-  const handleAddTicket = (ticket: (typeof ticketOptions)[number]) => {
+  const handleAddTicket = (ticket: { title: string; price: string }) => {
     setCheckoutItems((current) => {
       const existingItem = current.find((item) => item.id === ticket.title);
 
       if (existingItem) {
         return current.map((item) =>
-          item.id === ticket.title
-            ? { ...item, quantity: item.quantity + 1 }
-            : item,
+          item.id === ticket.title ? { ...item, quantity: item.quantity + 1 } : item,
         );
       }
 
@@ -126,7 +242,10 @@ function GeneralSalesBody() {
         {
           id: ticket.title,
           title: productCategories.find((item) => item.id === selectedCategory)?.label ?? "현장 상품",
-          time: schedules.find((schedule) => schedule.id === selectedSchedule)?.title ?? "현장 선택",
+          time:
+            selectedPackageScheduleSummary ??
+            schedules.find((schedule) => schedule.id === selectedSchedule)?.title ??
+            "현장 선택",
           detail: ticket.title,
           amount: ticket.price,
           quantity: 1,
@@ -186,6 +305,13 @@ function GeneralSalesBody() {
     }
   };
 
+  const handlePackageScheduleChange = (itemId: string, optionId: string) => {
+    setPackageScheduleSelections((current) => ({
+      ...current,
+      [itemId]: optionId,
+    }));
+  };
+
   return (
     <>
       <main className="pos-main">
@@ -204,7 +330,7 @@ function GeneralSalesBody() {
             </div>
 
             <div className="category-grid">
-              {productCategories.map((item) => {
+              {visibleProductCategories.map((item) => {
                 const isActive = item.id === selectedCategory;
 
                 return (
@@ -223,8 +349,28 @@ function GeneralSalesBody() {
           </section>
 
           <section className="panel panel--schedule">
-            <div className="panel__header">
-              <h2>스케줄 선택</h2>
+            <div className="panel__header panel__header--package">
+              <div className="panel__title-wrap">
+                <h2>스케줄 선택</h2>
+                {selectedPackageScheduleConfig ? (
+                  <div className="package-presets">
+                    {[2, 3, 4].map((count) => {
+                      const isActive = packagePresetCount === count;
+
+                      return (
+                        <button
+                          key={count}
+                          type="button"
+                          className={`package-presets__button${isActive ? " is-active" : ""}`}
+                          onClick={() => setPackagePresetCount(count as 2 | 3 | 4)}
+                        >
+                          {`상품 ${count}개`}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
               <div className="panel__nav">
                 <button type="button" aria-label="이전 스케줄">
                   <ChevronLeft size={30} strokeWidth={2.2} />
@@ -235,33 +381,89 @@ function GeneralSalesBody() {
               </div>
             </div>
 
-            <div className="schedule-grid">
-              {schedules.map((schedule) => {
-                const isActive = schedule.id === selectedSchedule;
+            {selectedPackageScheduleConfig ? (
+              <div className="package-schedule-grid" data-columns={packageColumnCount}>
+                {visiblePackageScheduleItems.map((item, index) => {
+                  const selectedOptionId = packageScheduleSelections[item.id] ?? item.options[0]?.id ?? "";
+                  const selectedOption = item.options.find((option) => option.id === selectedOptionId) ?? item.options[0];
 
-                return (
-                  <button
-                    key={schedule.id}
-                    className={`schedule-card${isActive ? " is-active" : ""}`}
-                    type="button"
-                    onClick={() => setSelectedSchedule(schedule.id)}
-                  >
-                    <div className="schedule-card__head">
-                      <strong>{schedule.title}</strong>
-                      {isActive ? <span className="schedule-card__check">✓</span> : null}
-                    </div>
-                    <dl className="schedule-card__stats">
-                      {schedule.rows.map(([label, value]) => (
-                        <div key={label}>
-                          <dt>{label}</dt>
-                          <dd>{value}</dd>
+                  if (!selectedOption) {
+                    return null;
+                  }
+
+                  return (
+                    <article key={item.id} className="package-schedule-card">
+                      <div className="package-schedule-card__top">
+                        <div className="package-schedule-card__info">
+                          <span className="package-schedule-card__label">{`구성상품 ${index + 1}`}</span>
+                          <strong className="package-schedule-card__title">{item.productName}</strong>
                         </div>
-                      ))}
-                    </dl>
-                  </button>
-                );
-              })}
-            </div>
+
+                        {item.kind === "schedule" ? (
+                          <label className="package-schedule-card__control">
+                            <span>스케줄 선택</span>
+                            <select
+                              value={selectedOption.id}
+                              onChange={(event) => handlePackageScheduleChange(item.id, event.target.value)}
+                            >
+                              {item.options.map((option) => (
+                                <option key={option.id} value={option.id}>
+                                  {option.title}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        ) : (
+                          <div className="package-schedule-card__period-wrap">
+                            <span className="package-schedule-card__badge">상품 일자</span>
+                            <div className="package-schedule-card__period">
+                              {selectedPackageScheduleConfig.periodValue ?? "2026-07-01 ~ 2026-12-31"}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <dl className="package-schedule-card__stats">
+                        {selectedOption.rows.map(([label, value]) => (
+                          <div key={label}>
+                            <dt>{label}</dt>
+                            <dd>{label === "정원" && value === "-" ? "∞" : value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </article>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="schedule-grid">
+                {schedules.map((schedule) => {
+                  const isActive = schedule.id === selectedSchedule;
+
+                  return (
+                    <button
+                      key={schedule.id}
+                      className={`schedule-card${isActive ? " is-active" : ""}`}
+                      type="button"
+                      onClick={() => setSelectedSchedule(schedule.id)}
+                    >
+                      <div className="schedule-card__head">
+                        <strong>{schedule.title}</strong>
+                        {isActive ? <span className="schedule-card__check">✓</span> : null}
+                      </div>
+                      <dl className="schedule-card__stats">
+                        {schedule.rows.map(([label, value]) => (
+                          <div key={label}>
+                            <dt>{label}</dt>
+                            <dd>{label === "정원" && value === "-" ? "∞" : value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </section>
 
           <section className="panel panel--tickets">
@@ -285,7 +487,7 @@ function GeneralSalesBody() {
             ) : null}
 
             <div className="ticket-grid">
-              {ticketOptions.map((ticket) => (
+              {visibleTicketOptions.map((ticket) => (
                 <button
                   key={ticket.title}
                   className="ticket-card"
@@ -382,9 +584,7 @@ function RefundBody() {
   return (
     <main className="refund-page">
       <section className="refund-page__content">
-        {/* ── 검색 카드 ── */}
         <section className="refund-search">
-          {/* Row 1: 필터 */}
           <div className="refund-search__filters">
             <label className="refund-field refund-field--date">
               <input type="date" defaultValue="2026-05-29" />
@@ -409,7 +609,6 @@ function RefundBody() {
             </label>
           </div>
 
-          {/* Row 2: 검색 쿼리 */}
           <div className="refund-search__query">
             <select
               className="refund-query__type"
@@ -419,16 +618,8 @@ function RefundBody() {
               <option>키 밴드</option>
               <option>티켓 번호</option>
             </select>
-            <input
-              className="refund-query__input refund-query__input--disabled"
-              value="550019"
-              readOnly
-            />
-            <input
-              className="refund-query__input refund-query__input--disabled"
-              value="05"
-              readOnly
-            />
+            <input className="refund-query__input refund-query__input--disabled" value="550019" readOnly />
+            <input className="refund-query__input refund-query__input--disabled" value="05" readOnly />
             <input
               className={`refund-query__input${isKeybandQuery ? " refund-query__input--disabled" : ""}`}
               defaultValue="5"
@@ -444,11 +635,7 @@ function RefundBody() {
               disabled={!isKeybandQuery}
             />
             <div className="refund-search__actions">
-              <button
-                type="button"
-                className="refund-button refund-button--search"
-                onClick={() => setHasResult(true)}
-              >
+              <button type="button" className="refund-button refund-button--search" onClick={() => setHasResult(true)}>
                 조회
               </button>
               <button
@@ -467,7 +654,6 @@ function RefundBody() {
           </div>
         </section>
 
-        {/* ── 결제 요약 테이블 ── */}
         <section className="refund-panel">
           <div className="refund-table refund-table--summary">
             <div className="refund-table__head refund-table__head--summary">
@@ -485,10 +671,7 @@ function RefundBody() {
             {summaryRows.length > 0 ? (
               <div className="refund-table__body refund-table__body--summary">
                 {summaryRows.map((row) => (
-                  <div
-                    key={`${row.date}-${row.paymentNo}`}
-                    className="refund-table__row refund-table__row--summary"
-                  >
+                  <div key={`${row.date}-${row.paymentNo}`} className="refund-table__row refund-table__row--summary">
                     <span>{row.date}</span>
                     <span>{row.paymentNo}</span>
                     <span>{row.paymentMethod}</span>
@@ -508,7 +691,6 @@ function RefundBody() {
           </div>
         </section>
 
-        {/* ── 티켓 상세 테이블 ── */}
         <section className="refund-panel refund-panel--detail">
           <div className="refund-table refund-table--detail">
             <div className="refund-table__head refund-table__head--detail">
@@ -526,10 +708,7 @@ function RefundBody() {
             {detailRows.length > 0 ? (
               <div className="refund-table__body refund-table__body--detail">
                 {detailRows.map((row) => (
-                  <div
-                    key={row.ticketNo}
-                    className="refund-table__row refund-table__row--detail"
-                  >
+                  <div key={row.ticketNo} className="refund-table__row refund-table__row--detail">
                     <span>{row.ticketNo}</span>
                     <span>{row.status}</span>
                     <span>{row.date}</span>
@@ -550,7 +729,6 @@ function RefundBody() {
         </section>
       </section>
 
-      {/* ── 하단 액션 바 ── */}
       <section className="refund-bottom">
         <div className="refund-bottom__reason">
           <label className="refund-bottom__label" htmlFor="refund-reason">
@@ -585,21 +763,12 @@ function RefundBody() {
             <button type="button" className="refund-button refund-button--light">
               현금 영수증 발행
             </button>
-            <button
-              type="button"
-              className="refund-button refund-button--primary refund-button--submit"
-            >
+            <button type="button" className="refund-button refund-button--primary refund-button--submit">
               환불
             </button>
           </div>
 
-          {cardInputEnabled ? (
-            <input
-              className="refund-card-input"
-              type="text"
-              placeholder="카드 번호를 입력하세요."
-            />
-          ) : null}
+          {cardInputEnabled ? <input className="refund-card-input" type="text" placeholder="카드 번호를 입력하세요." /> : null}
         </div>
       </section>
     </main>
