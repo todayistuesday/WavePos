@@ -1,5 +1,5 @@
 import { Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export type CheckoutItem = {
   id: string;
@@ -8,6 +8,9 @@ export type CheckoutItem = {
   detail: string;
   amount: string;
   quantity: number;
+  discountAmount?: number;
+  discountLabel?: string;
+  packageDetails?: string[];
   groupId?: string;
   groupLabel?: string;
 };
@@ -43,11 +46,19 @@ export function CheckoutPanel({
   onPaymentMethodChange,
   onPay,
 }: CheckoutPanelProps) {
+  const packageItemIds = useMemo(
+    () =>
+      items
+        .filter((item) => item.packageDetails && item.packageDetails.length > 0)
+        .map((item) => item.id),
+    [items],
+  );
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
     defaultFocusedPaymentMethod && paymentMethods.includes(defaultFocusedPaymentMethod)
       ? defaultFocusedPaymentMethod
       : paymentMethods[0] ?? "",
   );
+  const [expandedPackageItemIds, setExpandedPackageItemIds] = useState<string[]>(packageItemIds);
 
   useEffect(() => {
     setSelectedPaymentMethod(
@@ -63,10 +74,21 @@ export function CheckoutPanel({
     }
   }, [onPaymentMethodChange, selectedPaymentMethod]);
 
+  useEffect(() => {
+    setExpandedPackageItemIds((current) =>
+      Array.from(new Set([...packageItemIds, ...current.filter((itemId) => packageItemIds.includes(itemId))])),
+    );
+  }, [packageItemIds]);
+
   const totalAmount = items.reduce(
     (sum, item) => sum + Number(item.amount.replace(/[^0-9]/g, "")) * item.quantity,
     0,
   );
+  const totalDiscountAmount = items.reduce(
+    (sum, item) => sum + (item.discountAmount ?? 0) * item.quantity,
+    0,
+  );
+  const payableAmount = Math.max(totalAmount - totalDiscountAmount, 0);
   const clearDisabled = locked && !allowClearWhenLocked;
   const itemGroups = items.reduce<Array<{ id: string; label?: string; items: CheckoutItem[] }>>((groups, item) => {
     const groupId = item.groupId ?? item.id;
@@ -85,6 +107,14 @@ export function CheckoutPanel({
 
     return groups;
   }, []);
+
+  const togglePackageDetails = (itemId: string) => {
+    setExpandedPackageItemIds((current) =>
+      current.includes(itemId)
+        ? current.filter((currentItemId) => currentItemId !== itemId)
+        : [...current, itemId],
+    );
+  };
 
   return (
     <aside className="pos-right">
@@ -112,7 +142,10 @@ export function CheckoutPanel({
                 <section key={group.id} className="checkout__group" role="listitem" aria-label={group.label ?? group.id}>
                   {group.label ? (
                     <div className="checkout__groupHeader">
-                      <strong className="checkout__groupLabel">{group.label}</strong>
+                      <div className="checkout__groupMeta">
+                        <strong className="checkout__groupLabel">{group.label}</strong>
+                        <span className="checkout__groupCount">{`${group.items.length}건`}</span>
+                      </div>
                       <button
                         type="button"
                         className="checkout__groupRemove"
@@ -127,11 +160,17 @@ export function CheckoutPanel({
                     </div>
                   ) : null}
 
-                  <div className="checkout__groupItems">
-                    {group.items.map((item) => (
-                      <article key={item.id} className="checkout__item">
-                        <div className="checkout__itemHead">
-                          <strong>{item.title}</strong>
+                    <div className="checkout__groupItems">
+                      {group.items.map((item) => (
+                        <article
+                          key={item.id}
+                          className={`checkout__item${expandedPackageItemIds.includes(item.id) ? " is-expanded" : ""}`}
+                        >
+                          <div className="checkout__itemHead">
+                            <strong>{item.title}</strong>
+                          </div>
+
+                        <div className="checkout__itemMeta">
                           <span className="checkout__itemTime">{item.time}</span>
                         </div>
 
@@ -139,6 +178,33 @@ export function CheckoutPanel({
                           <span className="checkout__itemDetail">{item.detail}</span>
                           <strong className="checkout__itemAmount">{item.amount}</strong>
                         </div>
+
+                        {item.packageDetails && item.packageDetails.length > 0 ? (
+                          <div className="checkout__itemPackageWrap">
+                            <button
+                              type="button"
+                              className="checkout__itemPackageToggle"
+                              onClick={() => togglePackageDetails(item.id)}
+                              aria-expanded={expandedPackageItemIds.includes(item.id)}
+                            >
+                              {expandedPackageItemIds.includes(item.id) ? "구성 상세 접기" : "구성 상세 더보기"}
+                            </button>
+
+                            {expandedPackageItemIds.includes(item.id) ? (
+                              <div className="checkout__itemPackage">
+                                {item.packageDetails.map((packageDetail) => (
+                                  <div key={packageDetail} className="checkout__itemPackageRow">
+                                    {packageDetail}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : null}
+
+                        {item.discountLabel ? (
+                          <div className="checkout__itemDiscount">{`할인 : ${item.discountLabel}`}</div>
+                        ) : null}
 
                         <div className="checkout__itemControls">
                           <div className="checkout__qtyGroup" aria-label="수량">
@@ -187,12 +253,12 @@ export function CheckoutPanel({
           </div>
           <div>
             <dt>할인금액</dt>
-            <dd>0 원</dd>
+            <dd>{totalDiscountAmount.toLocaleString()} 원</dd>
           </div>
           <div className="checkout__received">
             <dt>받은 금액</dt>
             <dd>
-              <input type="text" value={totalAmount.toLocaleString()} readOnly />
+              <input type="text" value={payableAmount.toLocaleString()} readOnly />
             </dd>
           </div>
           <div>
