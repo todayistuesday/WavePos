@@ -40,7 +40,7 @@ export const packageScheduleConfigs = {
       {
         id: "package-item-1",
         kind: "schedule",
-        productName: "동해물과 백두산이 마르고 닳도록",
+        productName: "동해물과 백두산이 마르고 닳도록 하느님이 보우하사 우리나라 만세",
         options: [
           {
             id: "package-item-1-0900",
