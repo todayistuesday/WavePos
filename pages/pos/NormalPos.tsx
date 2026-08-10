@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+﻿import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { CheckoutPanel, type CheckoutItem } from "../../components/pos/CheckoutPanel";
@@ -16,22 +16,22 @@ type PackageScheduleConfig = (typeof packageScheduleConfigs)[keyof typeof packag
 type PackageScheduleItem = PackageScheduleConfig["items"][number];
 
 const sameDatePackageTicketOptions = [
-  { title: "슈트패키지", price: "9,000원" },
-  { title: "보드패키지", price: "18,000원" },
-  { title: "선베드 패키지", price: "19,000원" },
-  { title: "카바나 패키지", price: "24,000원" },
+  { title: "?덊듃?⑦궎吏", price: "9,000??" },
+  { title: "蹂대뱶?⑦궎吏", price: "18,000??" },
+  { title: "?좊쿋???⑦궎吏", price: "19,000??" },
+  { title: "移대컮???⑦궎吏", price: "24,000??" },
 ] as const;
 
 const lessonSuitBoardPackageTicketOptions = [
-  { title: "성인 패키지", price: "24,000원" },
-  { title: "어린이 패키지", price: "18,000원" },
+  { title: "?깆씤 ?⑦궎吏", price: "24,000??" },
+  { title: "?대┛???⑦궎吏", price: "18,000??" },
 ] as const;
 
 const miocostaLifejacketPackageTicketOptions = [
-  { title: "성인 입장 패키지", price: "18,000" },
-  { title: "소인 입장 패키지", price: "13,000" },
-  { title: "주말 성인 입장 패키지", price: "21,000" },
-  { title: "주말 소인 입장 패키지", price: "18,000" },
+  { title: "?깆씤 ?낆옣 ?⑦궎吏", price: "18,000" },
+  { title: "?뚯씤 ?낆옣 ?⑦궎吏", price: "13,000" },
+  { title: "二쇰쭚 ?깆씤 ?낆옣 ?⑦궎吏", price: "21,000" },
+  { title: "二쇰쭚 ?뚯씤 ?낆옣 ?⑦궎吏", price: "18,000" },
 ] as const;
 
 interface RefundSummaryRow {
@@ -63,12 +63,12 @@ interface RefundDetailRow {
 const refundSummaryRows: RefundSummaryRow[] = [
   {
     date: "2026-05-29",
-    paymentNo: "창구 01",
-    paymentMethod: "키밴드",
+    paymentNo: "李쎄뎄 01",
+    paymentMethod: "?ㅻ객??",
     issuedAt: "2026-05-29 09:59:06",
     ticketNo: "20260529-01-3",
     qty: "2",
-    paymentAmount: "10,000원",
+    paymentAmount: "10,000??",
     cardOrCashNo: "0000000",
     approvalNo: "0000000",
     cashReceipt: "Y",
@@ -78,24 +78,24 @@ const refundSummaryRows: RefundSummaryRow[] = [
 const refundDetailRows: RefundDetailRow[] = [
   {
     ticketNo: "20260529-05-2",
-    status: "발권 완료",
+    status: "諛쒓텒 ?꾨즺",
     date: "2026-05-29",
     time: "09:59:06",
-    product: "서핑 장비",
-    session: "1세션 (1시간)",
-    ticketType: "소프트 보드 1시간",
+    product: "?쒗븨 ?λ퉬",
+    session: "1?몄뀡 (1?쒓컙)",
+    ticketType: "?뚰봽??蹂대뱶 1?쒓컙",
     inspected: "N",
     inspectedAt: "-",
     tcmNo: "-",
   },
   {
     ticketNo: "20260529-05-1",
-    status: "발권 완료",
+    status: "諛쒓텒 ?꾨즺",
     date: "2026-05-29",
     time: "09:59:06",
-    product: "타월",
+    product: "???",
     session: "2026-05-21 ~\n2026-12-31",
-    ticketType: "비치타월",
+    ticketType: "鍮꾩튂???",
     inspected: "N",
     inspectedAt: "-",
     tcmNo: "-",
@@ -128,8 +128,10 @@ function GeneralSalesBody() {
   const [taggingError, setTaggingError] = useState("");
   const [isTaggingModalOpen, setIsTaggingModalOpen] = useState(false);
   const [lastTaggedBandNo, setLastTaggedBandNo] = useState("");
-  const [packagePresetCount, setPackagePresetCount] = useState<2 | 3 | 4>(3);
+  const [packagePresetCount, setPackagePresetCount] = useState<2 | 3 | 4 | 5>(3);
+  const [hasWrappedPackageTitle, setHasWrappedPackageTitle] = useState(false);
   const taggingInputRef = useRef<HTMLInputElement>(null);
+  const packageTitleRefs = useRef<Array<HTMLElement | null>>([]);
 
   const visibleProductCategories = useMemo(
     () => productCategories.filter((item) => !hiddenProductCategoryIds.has(item.id)),
@@ -154,16 +156,71 @@ function GeneralSalesBody() {
     return matchedEntry?.[1] ?? null;
   }, [packageScheduleEntries, selectedCategory]);
 
+  const extendedPackageScheduleConfig = useMemo(() => {
+    if (!selectedPackageScheduleConfig) {
+      return null;
+    }
+
+    if (selectedCategory === "package-lesson-suit-board") {
+      return {
+        ...selectedPackageScheduleConfig,
+        items: [
+          ...selectedPackageScheduleConfig.items,
+          {
+            id: "lesson-package-item-5",
+            kind: "schedule",
+            productName: "援ъ꽦?곹뭹 5",
+            options: [
+              {
+                id: "lesson-package-item-5-1100",
+                title: "11:00 ~ 12:00",
+                rows: [["?뺤썝", "12"], ["諛쒓텒", "3"], ["?붿뿬", "9"], ["?⑤씪???붿뿬", "4"]],
+              },
+              {
+                id: "lesson-package-item-5-1600",
+                title: "16:00 ~ 17:00",
+                rows: [["?뺤썝", "12"], ["諛쒓텒", "7"], ["?붿뿬", "5"], ["?⑤씪???붿뿬", "2"]],
+              },
+            ],
+          },
+        ],
+      };
+    }
+
+    if (selectedCategory === "package-miocosta-lifejacket") {
+      return {
+        ...selectedPackageScheduleConfig,
+        items: [
+          ...selectedPackageScheduleConfig.items,
+          {
+            id: "miocosta-package-item-5",
+            kind: "period",
+            productName: "援ъ꽦?곹뭹 5",
+            options: [
+              {
+                id: "miocosta-package-item-5-all-day",
+                title: "湲곌컙 ?곹뭹",
+                rows: [["?뺤썝", "60"], ["諛쒓텒", "14"], ["?붿뿬", "46"], ["?⑤씪???붿뿬", "46"]],
+              },
+            ],
+          },
+        ],
+      };
+    }
+
+    return selectedPackageScheduleConfig;
+  }, [selectedCategory, selectedPackageScheduleConfig]);
+
   const visiblePackageScheduleItems = useMemo(() => {
     if (!selectedPackageScheduleConfig) {
       return [] as PackageScheduleItem[];
     }
 
-    return selectedPackageScheduleConfig.items.slice(
+    return extendedPackageScheduleConfig.items.slice(
       0,
-      Math.min(packagePresetCount, selectedPackageScheduleConfig.items.length),
+      Math.min(packagePresetCount, extendedPackageScheduleConfig.items.length),
     );
-  }, [packagePresetCount, selectedPackageScheduleConfig]);
+  }, [extendedPackageScheduleConfig, packagePresetCount]);
 
   const packageColumnCount = useMemo(
     () => getPackageColumnCount(visiblePackageScheduleItems.length),
@@ -184,10 +241,10 @@ function GeneralSalesBody() {
           return item.productName;
         }
 
-        return `${item.productName} ${selectedOption.title}`;
+        return item.productName + " " + selectedOption.title;
       })
       .join(" / ");
-  }, [packageScheduleSelections, selectedPackageScheduleConfig, visiblePackageScheduleItems]);
+  }, [extendedPackageScheduleConfig, packageScheduleSelections, visiblePackageScheduleItems]);
 
   const visibleTicketOptions = useMemo(() => {
     if (selectedCategory === "package-same-date") {
@@ -227,6 +284,41 @@ function GeneralSalesBody() {
     taggingInputRef.current?.focus();
   }, [isTaggingModalOpen]);
 
+  useEffect(() => {
+    if (!selectedPackageScheduleConfig) {
+      setHasWrappedPackageTitle(false);
+      packageTitleRefs.current = [];
+      return;
+    }
+
+    const updatePackageTitleWrapState = () => {
+      const hasWrappedTitle = packageTitleRefs.current
+        .slice(0, visiblePackageScheduleItems.length)
+        .some((element) => {
+          if (!element) {
+            return false;
+          }
+
+          const lineHeight = Number.parseFloat(window.getComputedStyle(element).lineHeight);
+
+          if (!Number.isFinite(lineHeight)) {
+            return false;
+          }
+
+          return element.getBoundingClientRect().height > lineHeight * 1.5;
+        });
+
+      setHasWrappedPackageTitle(hasWrappedTitle);
+    };
+
+    updatePackageTitleWrapState();
+    window.addEventListener("resize", updatePackageTitleWrapState);
+
+    return () => {
+      window.removeEventListener("resize", updatePackageTitleWrapState);
+    };
+  }, [selectedPackageScheduleConfig, visiblePackageScheduleItems]);
+
   const handleAddTicket = (ticket: { title: string; price: string }) => {
     setCheckoutItems((current) => {
       const existingItem = current.find((item) => item.id === ticket.title);
@@ -241,11 +333,11 @@ function GeneralSalesBody() {
         ...current,
         {
           id: ticket.title,
-          title: productCategories.find((item) => item.id === selectedCategory)?.label ?? "현장 상품",
+          title: productCategories.find((item) => item.id === selectedCategory)?.label ?? "?꾩옣 ?곹뭹",
           time:
             selectedPackageScheduleSummary ??
             schedules.find((schedule) => schedule.id === selectedSchedule)?.title ??
-            "현장 선택",
+            "?꾩옣 ?좏깮",
           detail: ticket.title,
           amount: ticket.price,
           quantity: 1,
@@ -274,7 +366,7 @@ function GeneralSalesBody() {
       return;
     }
 
-    if (paymentMethod === "키밴드") {
+    if (paymentMethod === "?ㅻ객??") {
       setIsTaggingModalOpen(true);
       setTaggingError("");
       return;
@@ -288,7 +380,7 @@ function GeneralSalesBody() {
     const normalizedBandNo = normalizeKeybandTag(taggingBandNo);
 
     if (!normalizedBandNo) {
-      setTaggingError("키밴드를 태깅해 주세요.");
+      setTaggingError("?ㅻ객?쒕? ?쒓퉭??二쇱꽭??");
       return;
     }
 
@@ -318,12 +410,12 @@ function GeneralSalesBody() {
         <section className="pos-left">
           <section className="panel panel--products">
             <div className="panel__header">
-              <h2>상품 선택</h2>
+              <h2>?곹뭹 ?좏깮</h2>
               <div className="panel__nav">
-                <button type="button" aria-label="이전 상품">
+                <button type="button" aria-label="?댁쟾 ?곹뭹">
                   <ChevronLeft size={30} strokeWidth={2.2} />
                 </button>
-                <button type="button" aria-label="다음 상품">
+                <button type="button" aria-label="?ㅼ쓬 ?곹뭹">
                   <ChevronRight size={30} strokeWidth={2.2} />
                 </button>
               </div>
@@ -336,7 +428,7 @@ function GeneralSalesBody() {
                 return (
                   <button
                     key={item.id}
-                    className={`category-card${isActive ? " is-active" : ""}`}
+                    className={"category-card" + (isActive ? " is-active" : "")}
                     type="button"
                     onClick={() => setSelectedCategory(item.id)}
                   >
@@ -351,20 +443,20 @@ function GeneralSalesBody() {
           <section className="panel panel--schedule">
             <div className="panel__header panel__header--package">
               <div className="panel__title-wrap">
-                <h2>스케줄 선택</h2>
+                <h2>?ㅼ?以??좏깮</h2>
                 {selectedPackageScheduleConfig ? (
                   <div className="package-presets">
-                    {[2, 3, 4].map((count) => {
+                    {[2, 3, 4, 5].map((count) => {
                       const isActive = packagePresetCount === count;
 
                       return (
                         <button
                           key={count}
                           type="button"
-                          className={`package-presets__button${isActive ? " is-active" : ""}`}
-                          onClick={() => setPackagePresetCount(count as 2 | 3 | 4)}
+                          className={"package-presets__button" + (isActive ? " is-active" : "")}
+                          onClick={() => setPackagePresetCount(count as 2 | 3 | 4 | 5)}
                         >
-                          {`상품 ${count}개`}
+                          {"?곹뭹 " + count + "媛?"}
                         </button>
                       );
                     })}
@@ -372,17 +464,20 @@ function GeneralSalesBody() {
                 ) : null}
               </div>
               <div className="panel__nav">
-                <button type="button" aria-label="이전 스케줄">
+                <button type="button" aria-label="?댁쟾 ?ㅼ?以?">
                   <ChevronLeft size={30} strokeWidth={2.2} />
                 </button>
-                <button type="button" aria-label="다음 스케줄">
+                <button type="button" aria-label="?ㅼ쓬 ?ㅼ?以?">
                   <ChevronRight size={30} strokeWidth={2.2} />
                 </button>
               </div>
             </div>
 
             {selectedPackageScheduleConfig ? (
-              <div className="package-schedule-grid" data-columns={packageColumnCount}>
+              <div
+                className={"package-schedule-grid" + (hasWrappedPackageTitle ? " has-wrapped-title" : "")}
+                data-columns={packageColumnCount}
+              >
                 {visiblePackageScheduleItems.map((item, index) => {
                   const selectedOptionId = packageScheduleSelections[item.id] ?? item.options[0]?.id ?? "";
                   const selectedOption = item.options.find((option) => option.id === selectedOptionId) ?? item.options[0];
@@ -395,13 +490,18 @@ function GeneralSalesBody() {
                     <article key={item.id} className="package-schedule-card">
                       <div className="package-schedule-card__top">
                         <div className="package-schedule-card__info">
-                          <span className="package-schedule-card__label">{`구성상품 ${index + 1}`}</span>
-                          <strong className="package-schedule-card__title">{item.productName}</strong>
+                          <strong
+                            ref={(element) => {
+                              packageTitleRefs.current[index] = element;
+                            }}
+                            className="package-schedule-card__title"
+                          >
+                            {item.productName}
+                          </strong>
                         </div>
 
                         {item.kind === "schedule" ? (
                           <label className="package-schedule-card__control">
-                            <span>스케줄 선택</span>
                             <select
                               value={selectedOption.id}
                               onChange={(event) => handlePackageScheduleChange(item.id, event.target.value)}
@@ -415,9 +515,8 @@ function GeneralSalesBody() {
                           </label>
                         ) : (
                           <div className="package-schedule-card__period-wrap">
-                            <span className="package-schedule-card__badge">상품 일자</span>
                             <div className="package-schedule-card__period">
-                              {selectedPackageScheduleConfig.periodValue ?? "2026-07-01 ~ 2026-12-31"}
+                              {extendedPackageScheduleConfig?.periodValue ?? "2026-07-01 ~ 2026-12-31"}
                             </div>
                           </div>
                         )}
@@ -427,7 +526,7 @@ function GeneralSalesBody() {
                         {selectedOption.rows.map(([label, value]) => (
                           <div key={label}>
                             <dt>{label}</dt>
-                            <dd>{label === "정원" && value === "-" ? "∞" : value}</dd>
+                            <dd>{label === "?뺤썝" && value === "-" ? "??" : value}</dd>
                           </div>
                         ))}
                       </dl>
@@ -443,7 +542,7 @@ function GeneralSalesBody() {
                   return (
                     <button
                       key={schedule.id}
-                      className={`schedule-card${isActive ? " is-active" : ""}`}
+                      className={"schedule-card" + (isActive ? " is-active" : "")}
                       type="button"
                       onClick={() => setSelectedSchedule(schedule.id)}
                     >
@@ -455,7 +554,7 @@ function GeneralSalesBody() {
                         {schedule.rows.map(([label, value]) => (
                           <div key={label}>
                             <dt>{label}</dt>
-                            <dd>{label === "정원" && value === "-" ? "∞" : value}</dd>
+                            <dd>{label === "?뺤썝" && value === "-" ? "??" : value}</dd>
                           </div>
                         ))}
                       </dl>
@@ -468,13 +567,13 @@ function GeneralSalesBody() {
 
           <section className="panel panel--tickets">
             <div className="panel__header panel__header--inline">
-              <h2>권종 선택</h2>
-              <span className="panel__copy">매진포함</span>
+              <h2>沅뚯쥌 ?좏깮</h2>
+              <span className="panel__copy">留ㅼ쭊?ы븿</span>
               <div className="panel__nav">
-                <button type="button" aria-label="이전 권종">
+                <button type="button" aria-label="?댁쟾 沅뚯쥌">
                   <ChevronLeft size={30} strokeWidth={2.2} />
                 </button>
-                <button type="button" aria-label="다음 권종">
+                <button type="button" aria-label="?ㅼ쓬 沅뚯쥌">
                   <ChevronRight size={30} strokeWidth={2.2} />
                 </button>
               </div>
@@ -482,7 +581,7 @@ function GeneralSalesBody() {
 
             {lastTaggedBandNo ? (
               <div className="panel__copy" aria-live="polite">
-                {lastTaggedBandNo} 키밴드로 결제가 완료되었습니다.
+                {lastTaggedBandNo} ?ㅻ객?쒕줈 寃곗젣媛 ?꾨즺?섏뿀?듬땲??
               </div>
             ) : null}
 
@@ -503,13 +602,13 @@ function GeneralSalesBody() {
         </section>
 
         <CheckoutPanel
-          checkoutLabel={`총 ${checkoutQuantity}매 ${checkoutTotal.toLocaleString()}원 결제하기`}
+          checkoutLabel={"珥?" + checkoutQuantity + "留?" + checkoutTotal.toLocaleString() + "??寃곗젣?섍린"}
           items={checkoutItems}
           locked={false}
           onClear={handleClearItems}
           onRemoveItem={handleRemoveItem}
           paymentMethods={generalPaymentMethods}
-          defaultFocusedPaymentMethod="키밴드"
+          defaultFocusedPaymentMethod="?ㅻ객??"
           onPay={handlePay}
         />
       </main>
@@ -520,13 +619,13 @@ function GeneralSalesBody() {
           <section className="keyband-issue__panel">
             <div className="keyband-issue__header">
               <div>
-                <strong id="normal-pos-keyband-tag-title">키밴드 태깅</strong>
+                <strong id="normal-pos-keyband-tag-title">?ㅻ객???쒓퉭</strong>
               </div>
               <button
                 type="button"
                 className="keyband-issue__close"
                 onClick={closeTaggingModal}
-                aria-label="팝업 닫기"
+                aria-label="?앹뾽 ?リ린"
               >
                 <X size={18} />
               </button>
@@ -537,7 +636,7 @@ function GeneralSalesBody() {
                 ref={taggingInputRef}
                 type="text"
                 value={taggingBandNo}
-                placeholder="예: KB-2001"
+                placeholder="?? KB-2001"
                 onChange={(event) => handleTaggingInputChange(event.target.value)}
                 onKeyDown={(event) => {
                   if (event.key !== "Enter") {
@@ -551,17 +650,17 @@ function GeneralSalesBody() {
             </div>
 
             <div className="keyband-issue__hint">
-              스캐너 입력 후 Enter가 들어오면 현재 선택 내역 전체가 해당 키밴드 결제로 완료됩니다.
+              ?ㅼ틦???낅젰 ??Enter媛 ?ㅼ뼱?ㅻ㈃ ?꾩옱 ?좏깮 ?댁뿭 ?꾩껜媛 ?대떦 ?ㅻ객??寃곗젣濡??꾨즺?⑸땲??
             </div>
 
             {taggingError ? <div className="keyband-issue__error">{taggingError}</div> : null}
 
             <div className="keyband-issue__actions">
               <button type="button" className="keyband-issue__secondary" onClick={closeTaggingModal}>
-                취소
+                痍⑥냼
               </button>
               <button type="button" className="keyband-issue__primary" onClick={handleTaggingSubmit}>
-                키밴드 결제 완료
+                ?ㅻ객??寃곗젣 ?꾨즺
               </button>
             </div>
           </section>
@@ -575,11 +674,11 @@ function RefundBody() {
   const [hasResult, setHasResult] = useState(false);
   const [refundReason, setRefundReason] = useState("");
   const [cardInputEnabled, setCardInputEnabled] = useState(false);
-  const [refundQueryType, setRefundQueryType] = useState<"키 밴드" | "티켓 번호">("키 밴드");
+  const [refundQueryType, setRefundQueryType] = useState<"??諛대뱶" | "?곗폆 踰덊샇">("??諛대뱶");
 
   const summaryRows = hasResult ? refundSummaryRows : [];
   const detailRows = hasResult ? refundDetailRows : [];
-  const isKeybandQuery = refundQueryType === "키 밴드";
+  const isKeybandQuery = refundQueryType === "??諛대뱶";
 
   return (
     <main className="refund-page">
@@ -590,21 +689,21 @@ function RefundBody() {
               <input type="date" defaultValue="2026-05-29" />
             </label>
             <label className="refund-field refund-field--select">
-              <span>상태</span>
-              <select defaultValue="전체">
-                <option>전체</option>
+              <span>?곹깭</span>
+              <select defaultValue="?꾩껜">
+                <option>?꾩껜</option>
               </select>
             </label>
             <label className="refund-field refund-field--select">
-              <span>결제 수단</span>
-              <select defaultValue="전체">
-                <option>전체</option>
+              <span>寃곗젣 ?섎떒</span>
+              <select defaultValue="?꾩껜">
+                <option>?꾩껜</option>
               </select>
             </label>
             <label className="refund-field refund-field--select">
-              <span>창구</span>
-              <select defaultValue="전체">
-                <option>전체</option>
+              <span>李쎄뎄</span>
+              <select defaultValue="?꾩껜">
+                <option>?꾩껜</option>
               </select>
             </label>
           </div>
@@ -613,30 +712,30 @@ function RefundBody() {
             <select
               className="refund-query__type"
               value={refundQueryType}
-              onChange={(event) => setRefundQueryType(event.target.value as "키 밴드" | "티켓 번호")}
+              onChange={(event) => setRefundQueryType(event.target.value as "??諛대뱶" | "?곗폆 踰덊샇")}
             >
-              <option>키 밴드</option>
-              <option>티켓 번호</option>
+              <option>??諛대뱶</option>
+              <option>?곗폆 踰덊샇</option>
             </select>
             <input className="refund-query__input refund-query__input--disabled" value="550019" readOnly />
             <input className="refund-query__input refund-query__input--disabled" value="05" readOnly />
             <input
-              className={`refund-query__input${isKeybandQuery ? " refund-query__input--disabled" : ""}`}
+              className={"refund-query__input" + (isKeybandQuery ? " refund-query__input--disabled" : "")}
               defaultValue="5"
               disabled={isKeybandQuery}
             />
             <input
-              className={`refund-query__text${!isKeybandQuery ? " refund-query__input--disabled" : ""}`}
+              className={"refund-query__text" + (!isKeybandQuery ? " refund-query__input--disabled" : "")}
               placeholder={
                 isKeybandQuery
-                  ? "키 밴드를 인식해 주세요."
-                  : "티켓 번호 조회 시 키 밴드 입력은 비활성화됩니다."
+                  ? "??諛대뱶瑜??몄떇??二쇱꽭??"
+                  : "?곗폆 踰덊샇 議고쉶 ????諛대뱶 ?낅젰? 鍮꾪솢?깊솕?⑸땲??"
               }
               disabled={!isKeybandQuery}
             />
             <div className="refund-search__actions">
               <button type="button" className="refund-button refund-button--search" onClick={() => setHasResult(true)}>
-                조회
+                議고쉶
               </button>
               <button
                 type="button"
@@ -645,10 +744,10 @@ function RefundBody() {
                   setHasResult(false);
                   setRefundReason("");
                   setCardInputEnabled(false);
-                  setRefundQueryType("키 밴드");
+                  setRefundQueryType("??諛대뱶");
                 }}
               >
-                초기화
+                珥덇린??
               </button>
             </div>
           </div>
@@ -657,21 +756,21 @@ function RefundBody() {
         <section className="refund-panel">
           <div className="refund-table refund-table--summary">
             <div className="refund-table__head refund-table__head--summary">
-              <span>날짜</span>
-              <span>결제 번호</span>
-              <span>결제 수단</span>
-              <span>발권 일시</span>
-              <span>티켓 번호</span>
-              <span>수량</span>
-              <span>결제 금액</span>
-              <span>카드번호{"\n"}현금영수증 번호</span>
-              <span>승인 번호</span>
-              <span>현금{"\n"}영수증</span>
+              <span>?좎쭨</span>
+              <span>寃곗젣 踰덊샇</span>
+              <span>寃곗젣 ?섎떒</span>
+              <span>諛쒓텒 ?쇱떆</span>
+              <span>?곗폆 踰덊샇</span>
+              <span>?섎웾</span>
+              <span>寃곗젣 湲덉븸</span>
+              <span>移대뱶踰덊샇{"\n"}?꾧툑?곸닔利?踰덊샇</span>
+              <span>?뱀씤 踰덊샇</span>
+              <span>?꾧툑{"\n"}?곸닔利?</span>
             </div>
             {summaryRows.length > 0 ? (
               <div className="refund-table__body refund-table__body--summary">
                 {summaryRows.map((row) => (
-                  <div key={`${row.date}-${row.paymentNo}`} className="refund-table__row refund-table__row--summary">
+                  <div key={row.date + "-" + row.paymentNo} className="refund-table__row refund-table__row--summary">
                     <span>{row.date}</span>
                     <span>{row.paymentNo}</span>
                     <span>{row.paymentMethod}</span>
@@ -686,7 +785,7 @@ function RefundBody() {
                 ))}
               </div>
             ) : (
-              <div className="refund-table__empty">데이터가 존재하지 않습니다.</div>
+              <div className="refund-table__empty">?곗씠?곌? 議댁옱?섏? ?딆뒿?덈떎.</div>
             )}
           </div>
         </section>
@@ -694,16 +793,16 @@ function RefundBody() {
         <section className="refund-panel refund-panel--detail">
           <div className="refund-table refund-table--detail">
             <div className="refund-table__head refund-table__head--detail">
-              <span>티켓번호</span>
-              <span>상태</span>
-              <span>날짜</span>
-              <span>시간</span>
-              <span>상품</span>
-              <span>회차</span>
-              <span>권종</span>
-              <span>검표 여부</span>
-              <span>검표 시간</span>
-              <span>TCM 예약 번호</span>
+              <span>?곗폆踰덊샇</span>
+              <span>?곹깭</span>
+              <span>?좎쭨</span>
+              <span>?쒓컙</span>
+              <span>?곹뭹</span>
+              <span>?뚯감</span>
+              <span>沅뚯쥌</span>
+              <span>寃???щ?</span>
+              <span>寃???쒓컙</span>
+              <span>TCM ?덉빟 踰덊샇</span>
             </div>
             {detailRows.length > 0 ? (
               <div className="refund-table__body refund-table__body--detail">
@@ -723,7 +822,7 @@ function RefundBody() {
                 ))}
               </div>
             ) : (
-              <div className="refund-table__empty">데이터가 존재하지 않습니다.</div>
+              <div className="refund-table__empty">?곗씠?곌? 議댁옱?섏? ?딆뒿?덈떎.</div>
             )}
           </div>
         </section>
@@ -732,12 +831,12 @@ function RefundBody() {
       <section className="refund-bottom">
         <div className="refund-bottom__reason">
           <label className="refund-bottom__label" htmlFor="refund-reason">
-            환불사유
+            ?섎텋?ъ쑀
           </label>
           <input
             id="refund-reason"
             type="text"
-            placeholder="(선택 사항) 환불 사유를 입력하세요."
+            placeholder="(?좏깮 ?ы빆) ?섎텋 ?ъ쑀瑜??낅젰?섏꽭??"
             value={refundReason}
             onChange={(event) => setRefundReason(event.target.value)}
           />
@@ -751,24 +850,24 @@ function RefundBody() {
                 checked={cardInputEnabled}
                 onChange={(event) => setCardInputEnabled(event.target.checked)}
               />
-              <span>카드 번호 입력</span>
+              <span>移대뱶 踰덊샇 ?낅젰</span>
             </label>
 
             <button type="button" className="refund-button refund-button--dark">
-              티켓 재출력
+              ?곗폆 ?ъ텧??
             </button>
             <button type="button" className="refund-button refund-button--light">
-              영수증 재출력
+              ?곸닔利??ъ텧??
             </button>
             <button type="button" className="refund-button refund-button--light">
-              현금 영수증 발행
+              ?꾧툑 ?곸닔利?諛쒗뻾
             </button>
             <button type="button" className="refund-button refund-button--primary refund-button--submit">
-              환불
+              ?섎텋
             </button>
           </div>
 
-          {cardInputEnabled ? <input className="refund-card-input" type="text" placeholder="카드 번호를 입력하세요." /> : null}
+          {cardInputEnabled ? <input className="refund-card-input" type="text" placeholder="移대뱶 踰덊샇瑜??낅젰?섏꽭??" /> : null}
         </div>
       </section>
     </main>
@@ -780,9 +879,19 @@ interface NormalPosProps {
 }
 
 export function NormalPos({ selectedTab }: NormalPosProps) {
-  if (selectedTab === "환불") {
+  if (selectedTab === "?섎텋") {
     return <RefundBody />;
   }
 
   return <GeneralSalesBody />;
 }
+
+
+
+
+
+
+
+
+
+
