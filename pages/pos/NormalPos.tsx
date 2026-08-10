@@ -34,6 +34,10 @@ const miocostaLifejacketPackageTicketOptions = [
   { title: "주말 소인 입장 패키지", price: "18,000" },
 ] as const;
 
+const SURF_DISCOUNT_LABEL = "시흥 시민";
+const SURF_DISCOUNT_AMOUNT = 1000;
+const DISCOUNT_ENABLED_CATEGORY_IDS = new Set(["surf", "package-same-date"]);
+
 interface RefundSummaryRow {
   date: string;
   paymentNo: string;
@@ -189,6 +193,28 @@ function GeneralSalesBody() {
       .join(" / ");
   }, [packageScheduleSelections, selectedPackageScheduleConfig, visiblePackageScheduleItems]);
 
+  const selectedPackageDetailLines = useMemo(() => {
+    if (!selectedPackageScheduleConfig) {
+      return [] as string[];
+    }
+
+    return visiblePackageScheduleItems.map((item) => {
+      const selectedOptionId = packageScheduleSelections[item.id] ?? item.options[0]?.id ?? "";
+      const selectedOption = item.options.find((option) => option.id === selectedOptionId) ?? item.options[0];
+
+      if (!selectedOption) {
+        return item.productName;
+      }
+
+      const detailValue =
+        item.kind === "period"
+          ? selectedPackageScheduleConfig.periodValue ?? selectedOption.title
+          : selectedOption.title;
+
+      return `${item.productName} · ${detailValue}`;
+    });
+  }, [packageScheduleSelections, selectedPackageScheduleConfig, visiblePackageScheduleItems]);
+
   const visibleTicketOptions = useMemo(() => {
     if (selectedCategory === "package-same-date") {
       return sameDatePackageTicketOptions;
@@ -214,6 +240,16 @@ function GeneralSalesBody() {
     [checkoutItems],
   );
 
+  const checkoutDiscountTotal = useMemo(
+    () => checkoutItems.reduce((sum, item) => sum + (item.discountAmount ?? 0) * item.quantity, 0),
+    [checkoutItems],
+  );
+
+  const checkoutPayableTotal = useMemo(
+    () => Math.max(checkoutTotal - checkoutDiscountTotal, 0),
+    [checkoutDiscountTotal, checkoutTotal],
+  );
+
   const checkoutQuantity = useMemo(
     () => checkoutItems.reduce((sum, item) => sum + item.quantity, 0),
     [checkoutItems],
@@ -230,6 +266,7 @@ function GeneralSalesBody() {
   const handleAddTicket = (ticket: { title: string; price: string }) => {
     setCheckoutItems((current) => {
       const existingItem = current.find((item) => item.id === ticket.title);
+      const hasRegionalDiscount = DISCOUNT_ENABLED_CATEGORY_IDS.has(selectedCategory);
 
       if (existingItem) {
         return current.map((item) =>
@@ -243,12 +280,17 @@ function GeneralSalesBody() {
           id: ticket.title,
           title: productCategories.find((item) => item.id === selectedCategory)?.label ?? "현장 상품",
           time:
-            selectedPackageScheduleSummary ??
+            selectedPackageScheduleConfig
+              ? `구성상품 ${selectedPackageDetailLines.length}개 선택`
+              : selectedPackageScheduleSummary ??
             schedules.find((schedule) => schedule.id === selectedSchedule)?.title ??
             "현장 선택",
           detail: ticket.title,
           amount: ticket.price,
           quantity: 1,
+          discountAmount: hasRegionalDiscount ? SURF_DISCOUNT_AMOUNT : undefined,
+          discountLabel: hasRegionalDiscount ? SURF_DISCOUNT_LABEL : undefined,
+          packageDetails: selectedPackageScheduleConfig ? selectedPackageDetailLines : undefined,
         },
       ];
     });
@@ -395,13 +437,11 @@ function GeneralSalesBody() {
                     <article key={item.id} className="package-schedule-card">
                       <div className="package-schedule-card__top">
                         <div className="package-schedule-card__info">
-                          <span className="package-schedule-card__label">{`구성상품 ${index + 1}`}</span>
                           <strong className="package-schedule-card__title">{item.productName}</strong>
                         </div>
 
                         {item.kind === "schedule" ? (
                           <label className="package-schedule-card__control">
-                            <span>스케줄 선택</span>
                             <select
                               value={selectedOption.id}
                               onChange={(event) => handlePackageScheduleChange(item.id, event.target.value)}
@@ -415,7 +455,6 @@ function GeneralSalesBody() {
                           </label>
                         ) : (
                           <div className="package-schedule-card__period-wrap">
-                            <span className="package-schedule-card__badge">상품 일자</span>
                             <div className="package-schedule-card__period">
                               {selectedPackageScheduleConfig.periodValue ?? "2026-07-01 ~ 2026-12-31"}
                             </div>
@@ -503,7 +542,7 @@ function GeneralSalesBody() {
         </section>
 
         <CheckoutPanel
-          checkoutLabel={`총 ${checkoutQuantity}매 ${checkoutTotal.toLocaleString()}원 결제하기`}
+          checkoutLabel={`총 ${checkoutQuantity}매 ${checkoutPayableTotal.toLocaleString()}원 결제하기`}
           items={checkoutItems}
           locked={false}
           onClear={handleClearItems}

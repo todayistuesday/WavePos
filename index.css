@@ -177,14 +177,14 @@ input:focus-visible {
 
 .pos-main {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 420px;
+  grid-template-columns: minmax(0, 1fr) 620px;
   min-height: 0;
   overflow: hidden;
 }
 
 .keyband-main {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 436px;
+  grid-template-columns: minmax(0, 1fr) 620px;
   min-height: 0;
   overflow: hidden;
 }
@@ -199,7 +199,7 @@ input:focus-visible {
 .pos-right {
   border-left: 1px solid var(--line);
   background: var(--surface);
-  padding: 30px 28px 24px 28px;
+  padding: 20px 16px 18px;
   min-height: 0;
   display: flex;
   overflow: hidden;
@@ -455,9 +455,6 @@ input:focus-visible {
 .package-schedule-card__info {
   min-width: 0;
   width: 100%;
-}
-
-.package-schedule-grid.has-wrapped-title .package-schedule-card__info {
   min-height: 60px;
 }
 
@@ -627,7 +624,7 @@ input:focus-visible {
 
 .checkout__header h2 {
   margin: 0;
-  font-size: 29px;
+  font-size: 36px;
   line-height: 1.2;
   font-weight: 800;
   letter-spacing: -0.03em;
@@ -637,7 +634,7 @@ input:focus-visible {
   border: 0;
   background: transparent;
   color: #657084;
-  font-size: 19px;
+  font-size: 22px;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
@@ -668,8 +665,8 @@ input:focus-visible {
 .checkout__summary {
   margin: 0;
   display: grid;
-  gap: 18px;
-  padding-top: 24px;
+  gap: 14px;
+  padding-top: 20px;
 }
 
 .checkout__summary div {
@@ -680,45 +677,45 @@ input:focus-visible {
 }
 
 .checkout__summary dt {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 700;
   color: #546171;
 }
 
 .checkout__summary dd {
   margin: 0;
-  font-size: 19px;
+  font-size: 24px;
   font-weight: 800;
   color: #111318;
 }
 
 .checkout__received input {
   width: 190px;
-  height: 60px;
+  height: 64px;
   padding: 0 18px;
   border-radius: 14px;
   border: 2px solid #d7dce3;
   background: #fff;
   color: #6a717f;
-  font-size: 22px;
-  font-weight: 600;
-  text-align: left;
+  font-size: 26px;
+  font-weight: 700;
+  text-align: right;
 }
 
 .checkout__actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  padding-top: 18px;
+  gap: 12px;
+  padding-top: 16px;
 }
 
 .action-outline {
-  height: 74px;
+  height: 70px;
   border-radius: 14px;
   border: 3px solid #b14ef7;
   background: #fff;
   color: var(--accent);
-  font-size: 21px;
+  font-size: 24px;
   font-weight: 800;
   cursor: pointer;
 }
@@ -726,17 +723,17 @@ input:focus-visible {
 .checkout__methods {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 11px;
-  padding-top: 18px;
+  gap: 10px;
+  padding-top: 16px;
 }
 
 .method-button {
-  height: 74px;
+  height: 68px;
   border-radius: 14px;
   border: 3px solid #dfe3ea;
   background: #fff;
   color: #3d4653;
-  font-size: 20px;
+  font-size: 23px;
   font-weight: 800;
   cursor: pointer;
   transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease,
@@ -751,13 +748,13 @@ input:focus-visible {
 }
 
 .checkout__pay {
-  margin-top: 18px;
-  height: 84px;
+  margin-top: 16px;
+  height: 86px;
   border: 0;
   border-radius: 14px;
   background: linear-gradient(180deg, #901cf0 0%, #8b16f1 100%);
   color: #fff;
-  font-size: 29px;
+  font-size: 34px;
   font-weight: 800;
   letter-spacing: -0.03em;
   cursor: pointer;
@@ -1464,8 +1461,7 @@ input:focus-visible {
 
 .checkout__items {
   display: grid;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 10px;
   min-height: 0;
   overflow-y: auto;
   align-content: start;
@@ -1474,7 +1470,7 @@ input:focus-visible {
 
 .checkout__group {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .checkout__groupHeader {
@@ -1485,10 +1481,23 @@ input:focus-visible {
   padding: 0 2px;
 }
 
+.checkout__groupMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .checkout__groupLabel {
   color: #556173;
-  font-size: 13px;
+  font-size: 17px;
   font-weight: 800;
+}
+
+.checkout__groupCount {
+  color: #8b95a5;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .checkout__groupRemove {
@@ -1512,63 +1521,142 @@ input:focus-visible {
 
 .checkout__groupItems {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .checkout__item {
   border: 1px solid #dce2ea;
   border-radius: 14px;
   background: #fff;
-  padding: 14px 16px;
-  display: grid;
-  gap: 10px;
+  padding: 12px 14px;
 }
 
 .checkout__itemHead {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
+  display: block;
 }
 
 .checkout__itemHead strong {
   color: #1f2530;
-  font-size: 17px;
+  font-size: 24px;
   font-weight: 800;
-  line-height: 1.35;
+  line-height: 1.4;
+}
+
+.checkout__itemHead > strong:first-child {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.checkout__itemMeta {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  margin-top: 6px;
 }
 
 .checkout__itemTime {
-  flex: 0 0 auto;
-  height: 24px;
-  padding: 0 10px;
-  border-radius: 999px;
-  background: #f3f5f8;
+  min-width: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
   color: #687385;
-  font-size: 13px;
+  font-size: 17px;
   font-weight: 700;
-  display: inline-flex;
-  align-items: center;
+  line-height: 1.5;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 .checkout__itemBody {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
+  margin-top: 6px;
 }
 
 .checkout__itemDetail {
+  min-width: 0;
+  flex: 1 1 auto;
   color: #5d6877;
-  font-size: 14px;
+  font-size: 17px;
   font-weight: 600;
+  line-height: 1.5;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.checkout__itemDiscount {
+  margin-top: 6px;
+  color: #8f2be8;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.45;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.checkout__itemPackageWrap {
+  margin-top: 8px;
+  display: grid;
+  gap: 8px;
+}
+
+.checkout__itemPackageToggle {
+  justify-self: start;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid #dddff4;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #6a55d8;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.checkout__itemPackage {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #f7f9fc;
+}
+
+.checkout__itemPackageRow {
+  min-width: 0;
+  color: #5f6b7f;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.45;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.checkout__item.is-expanded {
+  border-color: #d7dcef;
 }
 
 .checkout__itemAmount {
+  flex: 0 0 auto;
   color: var(--accent);
-  font-size: 18px;
+  font-size: 28px;
   font-weight: 800;
   white-space: nowrap;
+  line-height: 1.35;
+  text-align: right;
 }
 
 .checkout__itemControls {
@@ -1576,10 +1664,11 @@ input:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  margin-top: 10px;
 }
 
 .checkout__qtyGroup {
-  height: 36px;
+  height: 38px;
   border: 1px solid #d7dce3;
   border-radius: 10px;
   overflow: hidden;
@@ -1592,7 +1681,7 @@ input:focus-visible {
   border: 0;
   background: #fff;
   color: #4d5766;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -1605,13 +1694,13 @@ input:focus-visible {
 }
 
 .checkout__qtyValue {
-  width: 52px;
+  width: 54px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: #fff;
   color: #2a3341;
-  font-size: 16px;
+  font-size: 19px;
   font-weight: 700;
   border-left: 1px solid #d7dce3;
   border-right: 1px solid #d7dce3;
@@ -1619,7 +1708,7 @@ input:focus-visible {
 
 .checkout__deleteButton {
   width: 42px;
-  height: 36px;
+  height: 38px;
   border: 1px solid #d7dce3;
   border-radius: 10px;
   background: #fff;
@@ -2881,11 +2970,11 @@ input:focus-visible {
 
 @media (max-width: 1500px) {
   .pos-main {
-    grid-template-columns: minmax(0, 1fr) 380px;
+    grid-template-columns: minmax(0, 1fr) 520px;
   }
 
   .keyband-main {
-    grid-template-columns: minmax(0, 1fr) 396px;
+    grid-template-columns: minmax(0, 1fr) 536px;
   }
 
   .pos-tabs {
