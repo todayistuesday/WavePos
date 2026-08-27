@@ -281,7 +281,7 @@ function GeneralSalesBody() {
           title: productCategories.find((item) => item.id === selectedCategory)?.label ?? "현장 상품",
           time:
             selectedPackageScheduleConfig
-              ? `구성상품 ${selectedPackageDetailLines.length}개 선택`
+              ? ""
               : selectedPackageScheduleSummary ??
             schedules.find((schedule) => schedule.id === selectedSchedule)?.title ??
             "현장 선택",

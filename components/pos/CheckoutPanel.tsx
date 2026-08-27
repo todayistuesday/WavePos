@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 export type CheckoutItem = {
   id: string;
   title: string;
-  time: string;
+  time?: string;
   detail: string;
   amount: string;
   quantity: number;
@@ -170,9 +170,11 @@ export function CheckoutPanel({
                             <strong>{item.title}</strong>
                           </div>
 
-                        <div className="checkout__itemMeta">
-                          <span className="checkout__itemTime">{item.time}</span>
-                        </div>
+                        {item.time && (
+                          <div className="checkout__itemMeta">
+                            <span className="checkout__itemTime">{item.time}</span>
+                          </div>
+                        )}
 
                         <div className="checkout__itemBody">
                           <span className="checkout__itemDetail">{item.detail}</span>
